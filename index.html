@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0f5132">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon.svg">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>麻將計算機</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header><h1>🀄 台灣麻將計算機</h1></header>
+
+<nav class="tabs">
+  <button data-tab="calc" class="active">算台</button>
+  <button data-tab="board">計分板</button>
+  <button data-tab="set">設定</button>
+</nav>
+
+<main>
+<section id="calc" class="tab active">
+  <div class="card">
+    <div class="row"><label>胡牌者</label><select id="winner"></select></div>
+    <div class="row"><label>方式</label>
+      <div class="seg" id="winType">
+        <button data-v="zimo" class="active">自摸</button>
+        <button data-v="ron">放槍</button>
+      </div>
+    </div>
+    <div class="row" id="loserRow" hidden><label>放槍者</label><select id="loser"></select></div>
+    <div class="row"><label>莊家</label><select id="dealer"></select></div>
+    <div class="row"><label>連莊次數</label>
+      <div class="stepper"><button data-d="-1">−</button><span id="streak">0</span><button data-d="1">＋</button></div>
+    </div>
+  </div>
+
+  <div class="card"><h2>台型</h2><div id="yaku"></div></div>
+
+  <div class="card result">
+    <div>共 <b id="taiTotal">0</b> 台</div>
+    <div id="payDetail"></div>
+    <button id="commit" class="primary">記錄這一局</button>
+  </div>
+</section>
+
+<section id="board" class="tab">
+  <div class="card" id="scores"></div>
+  <div class="card"><h2>歷史紀錄</h2><ol id="history"></ol>
+    <div class="btns"><button id="undo">復原上一局</button><button id="reset" class="danger">全部重來</button></div>
+  </div>
+</section>
+
+<section id="set" class="tab">
+  <div class="card">
+    <div class="row"><label>底</label><input id="base" type="number" inputmode="numeric" min="0"></div>
+    <div class="row"><label>每台</label><input id="perTai" type="number" inputmode="numeric" min="0"></div>
+    <h2>玩家名稱</h2>
+    <div id="names"></div>
+    <p class="hint">結算公式：底 ＋ 台數 × 每台。自摸三家各付；放槍由放槍者付。莊家（胡或付）另加 1 台＋連莊 2n 台。</p>
+  </div>
+</section>
+</main>
+
+<script src="app.js"></script>
+</body>
+</html>

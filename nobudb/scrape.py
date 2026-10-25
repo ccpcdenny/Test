@@ -73,13 +73,15 @@ def cards(path):
 
 
 def officers():
-    soup = fetch("/ranking")
-    keys = ["武勇", "智略", "統帥", "速度", "魅力", "政務"]
-    out = []
-    for tr in soup.select("table.rank-table tbody tr"):
-        tds = [text(td) for td in tr.select("td")]
-        out.append({"name": tds[0], "clan": tds[1], **{k: int(v) for k, v in zip(keys, tds[2:])}})
-    return out
+    """名將錄頁面內嵌的完整武將資料（含成長值、特性、戰法）。"""
+    soup = fetch("/catalog")
+    payload = "".join(
+        json.loads(m.group(1))
+        for sc in soup.find_all("script")
+        if (m := re.match(r'self\.__next_f\.push\(\[1,(".*")\]\)$', sc.string or "", re.S))
+    )
+    data, _ = json.JSONDecoder().raw_decode(payload, payload.index('[{"id":"'))
+    return data
 
 
 def main():

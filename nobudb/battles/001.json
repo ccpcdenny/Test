@@ -93,6 +93,46 @@
         "說明": "御旗盾無觸發；扣掉軍學 2.5% 後，御旗盾無本身約 46.7%（推算）"
       },
       "caveat": "氏康混亂才打到隊友；氏康普攻吃武勇還是智略不明；千代戰鬥統率未取得"
+    },
+    {
+      "id": "r1-千代-疾風迅雷-秀吉",
+      "kind": "指揮戰法兵刃",
+      "rate": 0.76,
+      "attacker": "立花闇千代",
+      "defender": "豐臣秀吉",
+      "defender_troops_before": 9841,
+      "defender_troops_after": 9218,
+      "damage": 623,
+      "caveat": "千代戰鬥武勇、秀吉統率未取得"
+    },
+    {
+      "id": "r1-千代-疾風迅雷-甲斐",
+      "kind": "指揮戰法兵刃",
+      "rate": 0.76,
+      "attacker": "立花闇千代",
+      "defender": "成田甲斐",
+      "defender_troops_before": 9841,
+      "defender_troops_after": 9132,
+      "damage": 709,
+      "caveat": "千代戰鬥武勇、甲斐統率未取得"
+    },
+    {
+      "id": "r1-千代-普攻-甲斐",
+      "kind": "普通攻擊",
+      "rate": 1.0,
+      "attacker": "立花闇千代",
+      "defender": "成田甲斐",
+      "attacker_troops": 10252,
+      "defender_troops_before": 9132,
+      "defender_troops_after": 8211,
+      "damage": 921,
+      "caveat": "與道雪普攻福島近乎對照組：同為足輕隊、兵力相同、武勇約相同；甲斐已被麻痺"
     }
+  ],
+  "round1_events": [
+    "千代行動前：疾風迅雷（指揮）結算，秀吉、甲斐受傷，秀吉被麻痺",
+    "福島恢復 110（8956→9066，來源不明）",
+    "千代救援氏康 898（8903→9801）",
+    "挫其銳氣：秀吉造成傷害 −8%（顯示 −5.50%）"
   ]
 }

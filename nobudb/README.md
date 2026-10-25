@@ -9,6 +9,11 @@
 | `data/tactics.json` | 戰法：品質、類型、發動機率（`rate`，小數；待核對者為 null）、來源武將、說明 |
 | `data/status.json` | 戰法狀態：分類、疊加方式、說明、具備該狀態的戰法 |
 | `data/traits.json` | 特性：專屬／通用，通用特性含各等級說明 |
+| `data/facilities.json` | 本城／支城設施（協力、兵種營、陣太鼓、守備櫓、督戰台、兵舍…）各等級效果 |
+| `data/extra/tactics_missing.json` | 網站尚未收錄的戰法（手動補） |
+| `battles/001.json` | 第一場戰報樣本（雙方屬性、逐筆傷害） |
+| `MECHANICS.md` | 已確認／假設的戰鬥機制整理 |
+| `verify_attrs.py`、`fit_damage.py` | 屬性流程驗算、傷害公式擬合 |
 | `data/officers.json` | 武將完整資料：基礎六圍（Lv1）、每級成長、特性與解鎖星數、自帶／傳承戰法、評定眾技能 |
 
 ## 尚缺（模擬對戰需要，網站沒有）

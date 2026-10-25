@@ -84,6 +84,23 @@ def officers():
     return data
 
 
+def facilities():
+    """設施資料（本城／支城）寫在 [section] 頁面的 JS 檔裡，不在 HTML。"""
+    soup = fetch("/main-castle")
+    src = next(sc["src"] for sc in soup.find_all("script", src=True) if "%5Bsection%5D/page-" in sc["src"])
+    req = urllib.request.Request(BASE + src, headers={"User-Agent": "Mozilla/5.0"})
+    with urllib.request.urlopen(req, timeout=30) as r:
+        js = r.read().decode("utf-8")
+    for m in re.finditer(r"JSON\.parse\('(\{.*?\})'\)", js):
+        try:
+            data = json.loads(m.group(1))
+        except json.JSONDecodeError:
+            continue
+        if "military" in data and "branch" in data:
+            return data
+    raise RuntimeError("找不到設施資料")
+
+
 def main():
     OUT.mkdir(exist_ok=True)
     for name, fn in [
@@ -91,6 +108,7 @@ def main():
         ("status", lambda: cards("/status")),
         ("traits", lambda: cards("/traits")),
         ("officers", officers),
+        ("facilities", facilities),
     ]:
         data = fn()
         (OUT / f"{name}.json").write_text(json.dumps(data, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")

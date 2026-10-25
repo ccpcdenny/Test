@@ -13,7 +13,8 @@
 | `data/extra/tactics_missing.json` | 網站尚未收錄的戰法（手動補） |
 | `battles/001.json` | 第一場戰報樣本（雙方屬性、逐筆傷害） |
 | `MECHANICS.md` | 已確認／假設的戰鬥機制整理 |
-| `verify_attrs.py`、`fit_damage.py` | 屬性流程驗算、傷害公式擬合 |
+| `verify_attrs.py` | 戰鬥屬性流程驗算 |
+| `replay.py` | 重播驗證器：用真實戰報的隨機結果重算傷害並對答案（`--fit` 重新擬合參數），輸出 `battles/001_replay.json／.txt` |
 | `data/officers.json` | 武將完整資料：基礎六圍（Lv1）、每級成長、特性與解鎖星數、自帶／傳承戰法、評定眾技能 |
 
 ## 尚缺（模擬對戰需要，網站沒有）

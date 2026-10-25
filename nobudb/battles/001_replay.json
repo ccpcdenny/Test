@@ -1,0 +1,179 @@
+{
+ "params": {
+  "c": 0.00012,
+  "alpha": 1.75,
+  "beta": 190.0,
+  "r_ichiryo": 0.12
+ },
+ "log": [
+  {
+   "type": "攻擊",
+   "round": 1,
+   "attacker": "成田甲斐",
+   "defender": "北條氏康",
+   "note": "普攻（氏康統率 388.31）",
+   "predicted": 215.0,
+   "actual": 219,
+   "error_pct": -1.8,
+   "fit": true,
+   "defender_統率": 388.31
+  },
+  {
+   "round": 1,
+   "type": "狀態",
+   "target": "北條氏康",
+   "stat": "統率",
+   "delta": -140,
+   "reason": "一觸即發",
+   "now": 248.31
+  },
+  {
+   "type": "攻擊",
+   "round": 1,
+   "attacker": "成田甲斐",
+   "defender": "北條氏康",
+   "note": "連擊第二下",
+   "predicted": 367.0,
+   "actual": 387,
+   "error_pct": -5.2,
+   "fit": true,
+   "defender_統率": 248.31
+  },
+  {
+   "type": "攻擊",
+   "round": 1,
+   "attacker": "成田甲斐",
+   "defender": "北條氏康",
+   "note": "理非曲直",
+   "predicted": 704.6,
+   "actual": 743,
+   "error_pct": -5.2,
+   "fit": false,
+   "defender_統率": 248.31
+  },
+  {
+   "type": "攻擊",
+   "round": 1,
+   "attacker": "立花道雪",
+   "defender": "福島正則",
+   "note": "普攻",
+   "predicted": 894.5,
+   "actual": 885,
+   "error_pct": 1.1,
+   "fit": true,
+   "defender_統率": 178.5
+  },
+  {
+   "type": "攻擊",
+   "round": 1,
+   "attacker": "立花闇千代",
+   "defender": "豐臣秀吉",
+   "note": "疾風迅雷",
+   "predicted": 655.5,
+   "actual": 623,
+   "error_pct": 5.2,
+   "fit": false,
+   "defender_統率": 218.5
+  },
+  {
+   "type": "攻擊",
+   "round": 1,
+   "attacker": "立花闇千代",
+   "defender": "成田甲斐",
+   "note": "疾風迅雷",
+   "predicted": 695.7,
+   "actual": 709,
+   "error_pct": -1.9,
+   "fit": false,
+   "defender_統率": 175.5
+  },
+  {
+   "type": "攻擊",
+   "round": 1,
+   "attacker": "立花闇千代",
+   "defender": "成田甲斐",
+   "note": "普攻",
+   "predicted": 915.3,
+   "actual": 921,
+   "error_pct": -0.6,
+   "fit": true,
+   "defender_統率": 175.5
+  },
+  {
+   "type": "攻擊",
+   "round": 1,
+   "attacker": "福島正則",
+   "defender": "北條氏康",
+   "note": "普攻",
+   "predicted": 667.6,
+   "actual": 667,
+   "error_pct": 0.1,
+   "fit": true,
+   "defender_統率": 248.31
+  },
+  {
+   "type": "攻擊",
+   "round": 1,
+   "attacker": "福島正則",
+   "defender": "北條氏康",
+   "note": "連擊第二下（由兵力差推得）",
+   "predicted": 667.6,
+   "actual": 681,
+   "error_pct": -2.0,
+   "fit": false,
+   "defender_統率": 248.31
+  },
+  {
+   "type": "攻擊",
+   "round": 1,
+   "attacker": "北條氏康",
+   "defender": "立花闇千代",
+   "note": "混亂誤擊；御旗盾無等減傷合計 48.04%；攻擊屬性不明",
+   "predicted": 143.4,
+   "actual": 248,
+   "error_pct": -42.2,
+   "fit": false,
+   "defender_統率": 222.4,
+   "alt": "智略",
+   "predicted_if_智略": 205.5
+  },
+  {
+   "type": "攻擊",
+   "round": 1,
+   "attacker": "豐臣秀吉",
+   "defender": "立花道雪",
+   "note": "秀吉普攻；兵力為估計；攻擊屬性不明",
+   "predicted": 139.6,
+   "actual": 244,
+   "error_pct": -42.8,
+   "fit": false,
+   "defender_統率": 266.28,
+   "alt": "智略",
+   "predicted_if_智略": 432.7
+  },
+  {
+   "type": "攻擊",
+   "round": 2,
+   "attacker": "成田甲斐",
+   "defender": "北條氏康",
+   "note": "會心",
+   "predicted": 550.3,
+   "actual": 542,
+   "error_pct": 1.5,
+   "fit": true,
+   "defender_統率": 248.31
+  },
+  {
+   "type": "攻擊",
+   "round": 2,
+   "attacker": "成田甲斐",
+   "defender": "立花道雪",
+   "note": "連擊第二下，會心",
+   "predicted": 510.6,
+   "actual": 502,
+   "error_pct": 1.7,
+   "fit": true,
+   "defender_統率": 266.28
+  }
+ ]
+}

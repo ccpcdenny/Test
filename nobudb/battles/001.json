@@ -1,0 +1,31 @@
+{
+  "note": "第一場戰報。裝備暫不考慮。attr 為戰報 tooltip（取整，實際為小數捨去前）。null＝尚未取得。",
+  "morale": {"ours": 135.4, "enemy": 98.2, "enemy_damage_mult": 0.9874},
+  "initial_troops_per_general": {"ours": 10252, "enemy": 9841},
+  "round1_action_order": ["成田甲斐", "立花道雪", "立花闇千代", "福島正則", "北條氏康", "豐臣秀吉"],
+  "round1_speed": {"立花道雪": 162.2, "立花闇千代": 161.49, "福島正則": 159.88},
+  "round1_attr": {
+    "立花道雪": {"武勇": 408, "智略": 191, "統率": 266, "速度": 162, "魅力": 148, "政務": 169},
+    "福島正則": {"武勇": 299, "智略": 145, "統率": 178, "速度": 159, "魅力": 79, "政務": 100},
+    "北條氏康": null
+  },
+  "hits": [
+    {
+      "id": "r1-道雪-普攻-福島",
+      "kind": "普通攻擊",
+      "attacker": "立花道雪", "defender": "福島正則",
+      "attacker_troops": 10252, "defender_troops_before": 9841, "defender_troops_after": 8956,
+      "damage": 885,
+      "caveat": "885 由 9841−8956 推得（截圖數字被擋住一半）；福島當下的減傷狀態未確認"
+    },
+    {
+      "id": "r1-福島-普攻-氏康",
+      "kind": "普通攻擊",
+      "attacker": "福島正則", "defender": "北條氏康",
+      "attacker_troops": 9066, "defender_troops_before": 9801, "defender_troops_after": 9134,
+      "damage": 667,
+      "modifiers": {"一力當先": "+53%（50% + 3% 來源不明）", "士氣": 0.9874, "亂舞": "另對氏康隊友造成傷害，數字被擋住"},
+      "caveat": "氏康戰鬥屬性、減傷未知"
+    }
+  ]
+}

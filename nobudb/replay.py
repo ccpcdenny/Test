@@ -16,7 +16,7 @@ from pathlib import Path
 HERE = Path(__file__).parent
 
 # 傷害模型（工作模型，見 MECHANICS.md「傷害公式」）
-PARAMS = {"c": 1.24e-4, "alpha": 1.6, "beta": 230.0, "r_ichiryo": 0.1409}  # 一領具足實際 −14.09%（戰報）
+PARAMS = {"c": 1.24e-4, "alpha": 1.6, "beta": 230.0, "r_ichiryo": 0.12 * (1 + 173.96 / 1000)}  # 一領具足：基礎 12% × (1 + 氏康武勇/1000) = 14.0875%，戰報顯示 14.09%
 MORALE_ENEMY = 0.9874  # 敵方士氣 98.2 → 造成傷害 98.74%
 
 UNITS = {

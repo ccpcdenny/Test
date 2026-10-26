@@ -1,5 +1,7 @@
 # nobudb — 信長之野望 真戰 資料
 
+> **新對話請先讀 [HANDOFF.md](HANDOFF.md)**：專案目標、已確認規則、未解問題、下一步，不必重讀舊對話。
+
 資料來源：[nobudb.com](https://nobudb.com)（非官方社群整理，僅供參考）。
 
 更新資料：`python3 nobudb/scrape.py`（需要 `beautifulsoup4`）

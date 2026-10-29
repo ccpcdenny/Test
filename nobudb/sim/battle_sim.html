@@ -46,6 +46,24 @@ body{background:var(--bg);color:var(--ink);font-family:var(--sans)}
 .reds .rd.on{background:#d8463a}
 .reds .rd:focus-visible{outline:2px solid var(--gold);outline-offset:1px}
 .reds .rl{font-size:10px;color:var(--muted);margin-left:4px;min-width:2.6em}
+.ptb{font:inherit;font-size:10px;font-weight:700;padding:0 6px;border-radius:4px;border:1px solid var(--gold);background:var(--paper);color:var(--gold);cursor:pointer;line-height:1.6}
+.ptb:focus-visible{outline:2px solid var(--gold);outline-offset:1px}
+#ptsdlg{position:fixed;inset:0;z-index:30;background:rgba(15,14,12,.55);display:grid;place-items:center;padding:max(10px,env(safe-area-inset-top,0px)) max(10px,env(safe-area-inset-right,0px)) max(10px,env(safe-area-inset-bottom,0px)) max(10px,env(safe-area-inset-left,0px))}
+#ptsdlg[hidden]{display:none!important}
+.pbox{background:var(--paper);border:1px solid var(--line);border-radius:12px;width:min(440px,100%);max-height:100%;overflow:auto;padding:14px 16px;display:grid;gap:10px}
+.pbox h3{font-family:var(--serif);font-weight:900;font-size:18px;margin:0}
+.pbox .left{font-size:14px;color:var(--muted)} .pbox .left b{font-size:20px;color:var(--gold);font-variant-numeric:tabular-nums}
+.prow2{display:grid;grid-template-columns:3em repeat(2,2.4em) 1fr repeat(2,2.4em) 4.2em;gap:4px;align-items:center;font-size:14px}
+.prow2 .k{font-weight:700}
+.prow2 button{font:inherit;font-size:12px;padding:4px 0;border-radius:5px;border:1px solid var(--line);background:var(--paper2);color:var(--ink);cursor:pointer}
+.prow2 button:disabled{opacity:.35;cursor:default}
+.prow2 .bar2{height:10px;border-radius:5px;background:var(--bar-bg);overflow:hidden;position:relative}
+.prow2 .bar2 i{display:block;height:100%;background:var(--gold)}
+.prow2 .val{text-align:right;font-variant-numeric:tabular-nums;font-size:13px}
+.prow2 .val b{color:var(--gold)}
+.pset{display:flex;gap:6px;flex-wrap:wrap}
+.pset button{font:inherit;font-size:12.5px;padding:4px 10px;border-radius:999px;border:1px solid var(--line);background:var(--paper2);color:var(--ink);cursor:pointer}
+.pnote{font-size:12px;color:var(--muted);margin:0}
 .trs{display:flex;flex-wrap:wrap;gap:2px;justify-content:center;align-content:flex-start;min-height:32px}
 .trs span{font-size:9.5px;padding:0 4px;border-radius:3px;background:var(--paper2);border:1px solid var(--line);color:var(--ink)}
 .trs span.off{opacity:.35;text-decoration:line-through}
@@ -218,6 +236,16 @@ body{background:var(--bg);color:var(--ink);font-family:var(--sans)}
     <div class="rfoot"><button class="btn main" id="b-rerate">重新評分</button><button class="btn" id="b-rep">詳細報告</button><button class="btn" id="b-rclose">返回</button></div>
   </div>
 </div>
+<div id="ptsdlg" hidden role="dialog" aria-modal="true" aria-labelledby="pd-title">
+  <div class="pbox">
+    <h3 id="pd-title">自由加點</h3>
+    <div class="left" id="pd-left"></div>
+    <div id="pd-rows"></div>
+    <div class="pset"><button id="pd-def">預設分配</button><button id="pd-main">全加主屬性</button><button id="pd-even">平均分配</button><button id="pd-clear">全部清空</button></div>
+    <p class="pnote">可分配點數＝Lv50 的 50 點＋紅度 × 10。右欄為加點後的面板值（未含兵種、協力等戰鬥加成）。</p>
+    <div class="rfoot"><button class="btn main" id="pd-ok">完成並重新對戰</button></div>
+  </div>
+</div>
 <div class="below">
     <section class="panel" id="multi" hidden>
       <h3>多次對戰結果</h3>
@@ -229,7 +257,7 @@ body{background:var(--bg);color:var(--ink);font-family:var(--sans)}
       <div class="rtabs" id="rtabs" role="group" aria-label="選擇回合"></div>
       <div class="log" id="log"></div>
     </section>
-    <p class="warn">NOBUDB 模擬對戰測試版｜粗估：兵刃公式誤差約 8%，謀略公式尚未量測（暫用兵刃公式），對手屬性（Lv50 成長值＋加點 50＋紅度×10、協力 7%）與兵學為推估；點武將卡上的紅點可調整紅度。</p>
+    <p class="warn">NOBUDB 模擬對戰測試版｜粗估：兵刃公式誤差約 8%，謀略公式尚未量測（暫用兵刃公式），對手屬性（Lv50 成長值＋加點 50＋紅度×10、協力 7%）與兵學為推估；點武將卡上的紅點可調整紅度，「加點」可自由分配屬性點。</p>
   </div>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
@@ -241,13 +269,13 @@ const base=(T,A,D)=>C*Math.pow(Math.max(T,0),Q)*TS*(A+AO)*Math.exp(-D/S);
 const healAmt=(T,I,r)=>H*Math.pow(Math.max(T,0),Q)*TS*(I+AO)*r;
 const K=1.27;
 // ---------- 武將與紅度 ----------
-// 我方 p＝面板（含 100 點加點、裝備面板值），取自實際戰報；對手 p＝Lv50 成長值，加點 50＋紅度×10 依 al 分配（推估）
+// p＝Lv50 未加點的面板（我方含裝備面板值，取自實際戰報；對手為成長值推估）。自由加點＝50＋紅度×10，預設依 al 分配
 const UDEF={
- "立花道雪":{side:"o",unit:"足輕",p:{wu:307.48,zhi:148.27,tong:189.79,spd:125.49},al:{wu:1},ex:.0925,flat:{wu:1.6,tong:21},rb:.9555,rm:.9399,img:"img/tachibana-dosetsu.webp",
+ "立花道雪":{side:"o",unit:"足輕",p:{wu:207.48,zhi:148.27,tong:189.79,spd:125.49},al:{wu:1},ex:.0925,flat:{wu:1.6,tong:21},rb:.9555,rm:.9399,img:"img/tachibana-dosetsu.webp",
   tacs:[["電光雷轟","atk2"],["霹靂一擊","act"],["所向披靡","act"],["普通攻擊","atk"]]},
- "立花誾千代":{side:"o",unit:"足輕",boss:1,p:{wu:314.66,zhi:138.82,tong:155.8,spd:122.68},al:{wu:1},ex:.0925,flat:{wu:2,zhi:2,tong:21,spd:3.2},rb:.9555,rm:.9399,img:"img/tachibana-ginchiyo.webp",
+ "立花誾千代":{side:"o",unit:"足輕",boss:1,p:{wu:214.66,zhi:138.82,tong:155.8,spd:122.68},al:{wu:1},ex:.0925,flat:{wu:2,zhi:2,tong:21,spd:3.2},rb:.9555,rm:.9399,img:"img/tachibana-ginchiyo.webp",
   tacs:[["疾風迅雷","cmd"],["御旗盾無","pas"],["五里霧中","act"],["普通攻擊","atk"]]},
- "北條氏康":{side:"o",unit:"足輕",p:{wu:136.98,zhi:189.98,tong:287.41,spd:125.85},al:{tong:1},ex:.07,flat:{tong:23.3},rb:.9555,rm:.9399,img:"img/hojo-ujiyasu.webp",
+ "北條氏康":{side:"o",unit:"足輕",p:{wu:136.98,zhi:189.98,tong:187.41,spd:125.85},al:{tong:1},ex:.07,flat:{tong:23.3},rb:.9555,rm:.9399,img:"img/hojo-ujiyasu.webp",
   tacs:[["相模之獅","act"],["一領具足","cmd"],["三河武士","unit"],["普通攻擊","atk"]]},
  "伊達政宗":{side:"t",unit:"鐵炮",boss:1,p:{wu:184,zhi:185,tong:188,spd:117},al:{wu:.5,zhi:.5},pts:1,ex:.07,flat:{},rb:1,rm:1,img:"img/date-masamune.webp",
   tacs:[["伊達風采","cmd"],["攻其不備","act"],["龍騎兵","unit"],["普通攻擊","atk"]]},
@@ -278,14 +306,22 @@ const CAMP={o:4,date:2,toku:1};  // 兵種營等級（立花足輕 Lv10、伊達
 const RED={}; Object.keys(UDEF).forEach(n=>RED[n]=5);
 try{const sv=JSON.parse(localStorage.getItem("nobudb-red")||"{}");for(const k in sv)if(k in RED)RED[k]=sv[k]}catch(e){}
 const TEAMLV={};
+const SK=["wu","zhi","tong","spd"], SKN={wu:"武勇",zhi:"智略",tong:"統率",spd:"速度"};
+const totalPts=n=>50+10*RED[n];
+const PTS={}; try{const sv=JSON.parse(localStorage.getItem("nobudb-pts")||"{}");for(const k in sv)if(k in UDEF)PTS[k]=sv[k]}catch(e){}
+function alloc(n){const T=totalPts(n);let a=PTS[n];
+  if(!a){a={};SK.forEach(k=>a[k]=Math.round((UDEF[n].al[k]||0)*T))}
+  const sum=SK.reduce((x,k)=>x+(a[k]||0),0);
+  if(sum>T){const f=T/sum,b={};SK.forEach(k=>b[k]=Math.floor((a[k]||0)*f));return b}
+  return {...a}}
 function buildTeam(names,campKey){
   const on=n=>TRAITS[n].filter(t=>RED[n]>=t[1]);
   const lv=CAMP[campKey]+names.reduce((a,n)=>a+on(n).reduce((b,t)=>b+(t[2].lv||0),0),0);
   TEAMLV[campKey]=lv;
   let teamRb=1,teamRm=1,teamDealt=0; names.forEach(n=>on(n).forEach(([,,f])=>{if(f.teamRb)teamRb*=f.teamRb;if(f.teamRm)teamRm*=f.teamRm;if(f.teamDealt)teamDealt+=f.teamDealt}));
-  return names.map(n=>{const d=UDEF[n],r=RED[n],K=1+.02*lv+d.ex,loss=(5-r)*10+(d.pts?-(50+10*r):0);
-    const st={};for(const k of ["wu","zhi","tong","spd"])st[k]=(d.p[k]-(d.al[k]||0)*loss)*(k==="spd"&&d.side==="o"?K:K);
-    const u={n,side:d.side,unit:d.unit,boss:d.boss,img:d.img,tacs:d.tacs,crit:0,dealt:teamDealt,rb:d.rb*teamRb,rm:d.rm*teamRm,fl:{},red:r};
+  return names.map(n=>{const d=UDEF[n],r=RED[n],K=1+.02*lv+d.ex,A=alloc(n);
+    const st={};for(const k of SK)st[k]=(d.p[k]+(A[k]||0))*K;
+    const u={n,side:d.side,unit:d.unit,boss:d.boss,img:d.img,tacs:d.tacs,pts:A,crit:0,dealt:teamDealt,rb:d.rb*teamRb,rm:d.rm*teamRm,fl:{},red:r};
     let wuP=0,zhiP=0;on(n).forEach(([,,f])=>{if(f.wuPct)wuP+=f.wuPct;if(f.zhiPct)zhiP+=f.zhiPct;if(f.crit)u.crit+=f.crit;if(f.dealt&&d.boss)u.dealt+=f.dealt;if(f.rb)u.rb*=f.rb;if(f.rm)u.rm*=f.rm;if(f.fl)u.fl[f.fl]=1});
     u.wu=st.wu*(1+wuP)+(d.flat.wu||0); u.zhi=st.zhi*(1+zhiP)+(d.flat.zhi||0); u.tong=st.tong+(d.flat.tong||0); u.spd=st.spd+(d.flat.spd||0);
     return u});
@@ -505,7 +541,7 @@ function card(u){
     <div class="hd"><div class="row1">${u.boss?'<span class="badge">大將</span>':'<span class="badge sub">副將</span>'}<span>${fmt(u.T)} / ${fmt(T0)}</span></div>
       <div class="mini"><i style="width:${u.T/T0*100}%"></i></div>
       <div class="name">${u.n} <small style="font-family:var(--sans);font-weight:500;font-size:10px;color:var(--muted)">Lv50</small></div>
-      <div class="reds" role="group" aria-label="${u.n} 紅度">${[1,2,3,4,5].map(i=>`<button class="rd${i<=RED[u.n]?" on":""}" data-n="${u.n}" data-r="${i}" aria-label="${i} 紅" title="${i} 紅"></button>`).join("")}<span class="rl">${RED[u.n]?RED[u.n]+" 紅":"白板"}</span></div>
+      <div class="reds" role="group" aria-label="${u.n} 紅度">${[1,2,3,4,5].map(i=>`<button class="rd${i<=RED[u.n]?" on":""}" data-n="${u.n}" data-r="${i}" aria-label="${i} 紅" title="${i} 紅"></button>`).join("")}<span class="rl">${RED[u.n]?RED[u.n]+" 紅":"白板"}</span><button class="ptb" data-n="${u.n}">加點</button></div>
       <div class="trs">${TRAITS[u.n].map(([t,r,,ds])=>`<span class="${RED[u.n]>=r?"":"off"}" title="${r} 紅解鎖：${ds}">${t}</span>`).join("")}</div></div>
     <div class="pic"><div class="ph">${ph}</div><img src="${u.img}" alt="${u.n}" onerror="this.remove()"><span class="unit">${u.unit}</span><div class="dead">陣亡</div></div>
     <div class="sum">殺敵 ${fmt(kill)}　救援 ${fmt(heal)}</div>
@@ -573,7 +609,30 @@ function fit(){
 window.addEventListener("resize",fit);
 window.addEventListener("orientationchange",()=>setTimeout(fit,200));
 if(document.fonts)document.fonts.ready.then(fit);
-document.getElementById("stage").addEventListener("click",e=>{const b=e.target.closest(".rd");if(!b)return;
+// ---------- 自由加點 ----------
+let PDN=null;
+function drawPts(){const n=PDN,T=totalPts(n),a=alloc(n),used=SK.reduce((x,k)=>x+a[k],0),d=UDEF[n];
+  document.getElementById("pd-title").textContent=`自由加點・${n}（${RED[n]?RED[n]+" 紅":"白板"}）`;
+  document.getElementById("pd-left").innerHTML=`剩餘點數 <b>${T-used}</b> / ${T}`;
+  document.getElementById("pd-rows").innerHTML=SK.map(k=>`<div class="prow2"><span class="k">${SKN[k]}</span>
+    <button data-k="${k}" data-d="-10" ${a[k]<=0?"disabled":""}>−10</button><button data-k="${k}" data-d="-1" ${a[k]<=0?"disabled":""}>−1</button>
+    <span class="bar2" title="${a[k]} 點"><i style="width:${T?a[k]/T*100:0}%"></i></span>
+    <button data-k="${k}" data-d="1" ${used>=T?"disabled":""}>+1</button><button data-k="${k}" data-d="10" ${used>=T?"disabled":""}>+10</button>
+    <span class="val"><b>+${a[k]}</b>・${Math.round(d.p[k]+a[k])}</span></div>`).join("");}
+function setPts(a){PTS[PDN]=a;try{localStorage.setItem("nobudb-pts",JSON.stringify(PTS))}catch(e){}drawPts()}
+document.getElementById("pd-rows").addEventListener("click",e=>{const b=e.target.closest("button[data-k]");if(!b)return;
+  const a=alloc(PDN),T=totalPts(PDN),used=SK.reduce((x,k)=>x+a[k],0),k=b.dataset.k,dd=+b.dataset.d;
+  a[k]=Math.max(0,a[k]+(dd>0?Math.min(dd,T-used):dd));setPts(a)});
+document.getElementById("pd-def").onclick=()=>{delete PTS[PDN];setPts(undefined);delete PTS[PDN];try{localStorage.setItem("nobudb-pts",JSON.stringify(PTS))}catch(e){}drawPts()};
+document.getElementById("pd-main").onclick=()=>{const d=UDEF[PDN],m=SK.reduce((a,k)=>(d.al[k]||0)>(d.al[a]||0)?k:a,"wu"),a={wu:0,zhi:0,tong:0,spd:0};a[m]=totalPts(PDN);setPts(a)};
+document.getElementById("pd-even").onclick=()=>{const T=totalPts(PDN),q=Math.floor(T/4),a={wu:q,zhi:q,tong:q,spd:q};a.wu+=T-q*4;setPts(a)};
+document.getElementById("pd-clear").onclick=()=>setPts({wu:0,zhi:0,tong:0,spd:0});
+const closePts=()=>{document.getElementById("ptsdlg").hidden=true;rebuild();RATE=null;setOpp(OPPK)};
+document.getElementById("pd-ok").onclick=closePts;
+document.getElementById("ptsdlg").addEventListener("click",e=>{if(e.target.id==="ptsdlg")closePts()});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!document.getElementById("ptsdlg").hidden)closePts()});
+document.getElementById("stage").addEventListener("click",e=>{const pb=e.target.closest(".ptb");if(pb){PDN=pb.dataset.n;drawPts();document.getElementById("ptsdlg").hidden=false;return}
+  const b=e.target.closest(".rd");if(!b)return;
   const n=b.dataset.n,r=+b.dataset.r;RED[n]=(RED[n]===r&&r===1)?0:r;
   try{localStorage.setItem("nobudb-red",JSON.stringify(RED))}catch(e){}
   rebuild();RATE=null;setOpp(OPPK)});
@@ -621,7 +680,7 @@ function drawRate(){
   const order=T.units.slice().sort((a,c)=>(c.boss||0)-(a.boss||0));
   document.getElementById("rcards").innerHTML=order.map(u=>`<div class="rc ${sd}"><div class="nm">${u.n}${u.boss?' <small style="font-size:11px;color:var(--gold)">大將</small>':''}</div>
     <div class="tl">${u.tacs.filter(t=>t[0]!=="普通攻擊").map(t=>`<span>${t[0]}</span>`).join("")}</div>
-    <div class="at">武勇 ${Math.round(u.wu)}・智略 ${Math.round(u.zhi)}・統率 ${Math.round(u.tong)}・速度 ${Math.round(u.spd)}</div></div>`).join("");
+    <div class="at">武勇 ${Math.round(u.wu)}・智略 ${Math.round(u.zhi)}・統率 ${Math.round(u.tong)}・速度 ${Math.round(u.spd)}</div><div class="at">${RED[u.n]?RED[u.n]+" 紅":"白板"}・加點 ${SK.filter(k=>u.pts[k]).map(k=>SKN[k]+" +"+u.pts[k]).join("、")||"無"}</div></div>`).join("");
   const total=R.bars.reduce((a,b)=>a+b[1],0)/R.bars.length/10;
   const tier=total>=7.5?"T0":total>=6.5?"T1":total>=5.5?"T2":total>=4.5?"T3":"T4";
   document.getElementById("rtier").textContent=tier; document.getElementById("rscore").textContent=`(${total.toFixed(2)})`;

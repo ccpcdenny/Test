@@ -257,7 +257,7 @@ body{background:var(--bg);color:var(--ink);font-family:var(--sans)}
       <div class="rtabs" id="rtabs" role="group" aria-label="選擇回合"></div>
       <div class="log" id="log"></div>
     </section>
-    <p class="warn">NOBUDB 模擬對戰測試版｜粗估：兵刃公式誤差約 8%，謀略公式尚未量測（暫用兵刃公式），對手屬性（Lv50 成長值＋加點 50＋紅度×10、協力 7%）與兵學為推估；點武將卡上的紅點可調整紅度，「加點」可自由分配屬性點。</p>
+    <p class="warn">NOBUDB 模擬對戰測試版｜粗估：兵刃公式誤差約 8%，謀略公式尚未量測（暫用兵刃公式），伊達隊屬性為實戰實測值，德川隊屬性（Lv50 成長值＋加點 50＋紅度×10、協力 7%）與兵學為推估；點武將卡上的紅點可調整紅度，「加點」可自由分配屬性點。</p>
   </div>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
@@ -277,11 +277,11 @@ const UDEF={
   tacs:[["疾風迅雷","cmd"],["御旗盾無","pas"],["五里霧中","act"],["普通攻擊","atk"]]},
  "北條氏康":{side:"o",unit:"足輕",p:{wu:136.98,zhi:189.98,tong:187.41,spd:125.85},al:{tong:1},ex:.07,flat:{tong:23.3},rb:.9555,rm:.9399,img:"img/hojo-ujiyasu.webp",
   tacs:[["相模之獅","act"],["一領具足","cmd"],["三河武士","unit"],["普通攻擊","atk"]]},
- "伊達政宗":{side:"t",unit:"鐵炮",boss:1,p:{wu:184,zhi:185,tong:188,spd:117},al:{wu:.5,zhi:.5},pts:1,ex:.07,flat:{},rb:1,rm:1,img:"img/date-masamune.webp",
+ "伊達政宗":{side:"t",unit:"鐵炮",boss:1,p:{wu:184,zhi:185,tong:188,spd:117},obs:{wu:315,zhi:316,tong:251,spd:152.56},al:{wu:.5,zhi:.5},pts:1,ex:.07,flat:{},rb:1,rm:1,img:"img/date-masamune.webp",
   tacs:[["伊達風采","cmd"],["攻其不備","act"],["龍騎兵","unit"],["普通攻擊","atk"]]},
- "真田昌幸":{side:"t",unit:"鐵炮",p:{wu:105,zhi:231,tong:176,spd:76},al:{zhi:1},pts:1,ex:.07,flat:{},rb:1,rm:1,img:"img/sanada-masayuki.webp",
+ "真田昌幸":{side:"t",unit:"鐵炮",p:{wu:105,zhi:231,tong:176,spd:76},obs:{wu:135,zhi:408,tong:226,spd:153.16},al:{zhi:1},pts:1,ex:.07,flat:{},rb:1,rm:1,img:"img/sanada-masayuki.webp",
   tacs:[["表裡比興","act"],["誘敵深入","act"],["戰意崩壞","atk2"],["普通攻擊","atk"]]},
- "三好實休":{side:"t",unit:"鐵炮",p:{wu:116,zhi:187,tong:163,spd:75},al:{zhi:1},pts:1,ex:.07,flat:{},rb:1,rm:1,img:"img/miyoshi-jikkyu.webp",
+ "三好實休":{side:"t",unit:"鐵炮",p:{wu:116,zhi:187,tong:163,spd:75},obs:{wu:149,zhi:340,tong:216,spd:154.27},al:{zhi:1},pts:1,ex:.07,flat:{},rb:1,rm:1,img:"img/miyoshi-jikkyu.webp",
   tacs:[["風流武者","pas"],["回天轉運","act"],["瞬息萬變","act"],["普通攻擊","atk"]]},
  "德川家康":{side:"t",unit:"足輕",boss:1,p:{wu:155,zhi:169,tong:231,spd:61},al:{tong:1},pts:1,ex:.07,flat:{tong:5},rb:.975,rm:.975,img:"img/tokugawa-ieyasu.webp",
   tacs:[["三河魂","cmd"],["戮力同心","cmd"],["以逸待勞","act"],["普通攻擊","atk"]]},
@@ -295,9 +295,9 @@ const TRAITS={
  "立花道雪":[["雷電化身",0,{},"未計入"],["武威II",2,{wuPct:.025},"武勇 +2.5%"],["槍術II",3,{lv:2},"足輕 +2 級"],["盡力III",5,{crit:.05},"會心 +5%"]],
  "立花誾千代":[["近衛齊射",0,{fl:"近衛"},"普攻後 20% 麻痺"],["姬城督",2,{},"未計入"],["槍炮術II",3,{lv:2},"足輕 +2 級"],["武威I",5,{wuPct:.02},"武勇 +2%"]],
  "北條氏康":[["祿壽應穩",0,{},"未計入"],["上下一心",2,{fl:"上下一心"},"首回合道雪、氏康免控"],["堅固II",3,{teamRm:.97},"我軍受謀略 −3%"],["槍術II",5,{lv:2},"足輕 +2 級"]],
- "伊達政宗":[["獨眼龍",0,{dealt:.15},"大將時傷害 +15%"],["飛龍在天",2,{lv:3},"鐵炮 +3 級"],["善戰II",3,{crit:.029},"會心 2.9%"],["高昂II",5,{},"會心傷害 +3.8%（未計入）"]],
+ "伊達政宗":[["獨眼龍",0,{dealt:.1485},"大將時傷害 +14.85%（實測）"],["飛龍在天",2,{lv:3},"鐵炮 +3 級"],["善戰II",3,{crit:.029},"會心 2.9%"],["高昂II",5,{},"會心傷害 +3.8%（未計入）"]],
  "真田昌幸":[["老獪",0,{},"未計入"],["虛實",2,{},"未計入"],["弓炮術II",3,{lv:2},"鐵炮 +2 級"],["智慧I",5,{zhiPct:.02},"智略 +2%"]],
- "三好實休":[["物外軒",0,{fl:"物外軒"},"前 4 回合發動率 +4.5%"],["炮術III",2,{lv:3},"鐵炮 +3 級"],["固守II",3,{teamRb:.982},"我軍受兵刃 −1.8%"],["智慧I",5,{zhiPct:.02},"智略 +2%"]],
+ "三好實休":[["物外軒",0,{fl:"物外軒"},"前 4 回合發動率 +6.5%（實測）"],["炮術III",2,{lv:3},"鐵炮 +3 級"],["固守II",3,{teamRb:.982},"我軍受兵刃 −1.8%"],["智慧I",5,{zhiPct:.02},"智略 +2%"]],
  "德川家康":[["三河武士",0,{},"未計入"],["老狐狸",2,{},"無戰鬥效果"],["牢固II",3,{rb:.984,rm:.984},"受到傷害 −1.6%"],["弓槍術II",5,{lv:2},"足輕 +2 級"]],
  "本多忠勝":[["無傷雄師",0,{},"未計入"],["剛猛II",2,{fl:"剛猛"},"較易被普攻"],["槍術II",3,{lv:2},"足輕 +2 級"],["器術II",5,{},"器械用，無效"]],
  "本多正信":[["弓術II",0,{},"弓兵用，無效"],["看破III",2,{rm:.96},"受謀略 −4%"],["猛攻I",3,{teamDealt:.014},"我軍兵刃 +1.4%"],["智慧III",5,{zhiPct:.03},"智略 +3%"]],
@@ -314,6 +314,10 @@ function alloc(n){const T=totalPts(n);let a=PTS[n];
   const sum=SK.reduce((x,k)=>x+(a[k]||0),0);
   if(sum>T){const f=T/sum,b={};SK.forEach(k=>b[k]=Math.floor((a[k]||0)*f));return b}
   return {...a}}
+let OBSREF=false;
+function obsRef(n,campKey,names){ // 5 紅、預設加點時模型算出的值，作為實測值的基準
+  const sr={...RED},sp={...PTS};names.forEach(x=>{RED[x]=5;delete PTS[x]});OBSREF=true;
+  const u=buildTeam(names,campKey).find(x=>x.n===n);OBSREF=false;Object.assign(RED,sr);for(const x of names){if(sp[x])PTS[x]=sp[x]}return u}
 function buildTeam(names,campKey){
   const on=n=>TRAITS[n].filter(t=>RED[n]>=t[1]);
   const lv=CAMP[campKey]+names.reduce((a,n)=>a+on(n).reduce((b,t)=>b+(t[2].lv||0),0),0);
@@ -324,6 +328,7 @@ function buildTeam(names,campKey){
     const u={n,side:d.side,unit:d.unit,boss:d.boss,img:d.img,tacs:d.tacs,pts:A,crit:0,dealt:teamDealt,rb:d.rb*teamRb,rm:d.rm*teamRm,fl:{},red:r};
     let wuP=0,zhiP=0;on(n).forEach(([,,f])=>{if(f.wuPct)wuP+=f.wuPct;if(f.zhiPct)zhiP+=f.zhiPct;if(f.crit)u.crit+=f.crit;if(f.dealt&&d.boss)u.dealt+=f.dealt;if(f.rb)u.rb*=f.rb;if(f.rm)u.rm*=f.rm;if(f.fl)u.fl[f.fl]=1});
     u.wu=st.wu*(1+wuP)+(d.flat.wu||0); u.zhi=st.zhi*(1+zhiP)+(d.flat.zhi||0); u.tong=st.tong+(d.flat.tong||0); u.spd=st.spd+(d.flat.spd||0);
+    if(d.obs&&!OBSREF){const ref=obsRef(n,campKey,names);for(const k of SK)u[k]=d.obs[k]+(u[k]-ref[k]);u.obs=1}
     return u});
 }
 const OURS=[], OPP={
@@ -442,7 +447,7 @@ function battle(withLog){
       if(u.para&&R()<.3){u.para--;L(`${nm(u)}處於「麻痺」狀態，無法行動`);continue}
       phase="act";
       const ran=new Set(u.prep.map(x=>x[0])); for(const [pn,f] of u.prep){fire(u,pn);f()} u.prep=[];
-      const bon=(u.n==="三好實休"&&r<=4&&u.fl["物外軒"])?.045:0; let fired=0;
+      const bon=(u.n==="三好實休"&&r<=4&&u.fl["物外軒"])?.065:0; let fired=0;
       if(u.n==="立花道雪"){
         if(R()<.35){fire(u,"霹靂一擊");const t=pick(u,foes(u));hit(u,t,2.28,"b",u,"霹靂一擊");control(t,"para",2,"麻痺")}
         if(!ran.has("所向披靡")&&R()<.30){SEC("S 所向披靡");L(`${nm(u)}「所向披靡-預備」效果已施加`);u.prep.push(["所向披靡",()=>{for(const t of foes(u))hit(u,t,2.54,"b",u,"所向披靡")}])}

@@ -338,6 +338,8 @@ rebuild();
 let OPPK="date";
 const T0=10254;
 
+// 依 9 場實戰總覽校正（見 nobudb/fit/calibrate_overview.js）
+const JF={rate:.9,heal:1};
 function battle(withLog){
   const O=OPP[OPPK];
   const U=OURS.concat(O.units).map(d=>({...d,T:T0,para:0,conf:0,wall:0,imm:0,debuf:0,merc:0,prep:[],st:{},flags:{},drain:0,evade:0,dredP:0,dredT:0,dredR:0,hitsIn:0,tongUp:0}));
@@ -361,6 +363,7 @@ function battle(withLog){
   function hit(att,tgt,rate,kind,owner,tac,normal){
     if(!tgt||!alive(tgt))return 0;
     if(normal)L(`${nm(att)}對${nm(tgt)}發動普通攻擊`);
+    if(normal&&tgt.side==="o"&&att.side==="t")st.mk++;
     if(normal&&tgt.n==="德川家康"){const h=by("本多忠勝");if(h&&alive(h)&&R()<.8){L(`${nm(h)}執行來自【三河魂】的「援護」效果，代替${nm(tgt)}承受攻擊`);fire(by("德川家康"),"三河魂");tgt=h}}
     if(tgt.evade&&R()<tgt.evade){L(`${nm(tgt)}處於規避狀態，本次傷害無效`);L(`${nm(tgt)}損失了兵力0（${tgt.T}）`);return 0}
     if(tgt.wall>0){tgt.wall--; if(R()<.85){L(`${nm(tgt)}執行來自【相模之獅】的「鐵壁」效果`);L(`${nm(tgt)}損失了兵力0（${tgt.T}）`);return 0}}
@@ -390,7 +393,6 @@ function battle(withLog){
       }
     }
     if(normal&&tgt.side==="o"&&att.side==="t"){
-      st.mk++;
       if(tgt.n==="立花誾千代"){
         if(!tgt.flags.aisai&&st.rnd===1){tgt.flags.aisai=1;hit(tgt,att,.662,"b",tgt,"普通攻擊")}
         if(R()<.49){const al=mates(tgt).filter(x=>x!==tgt);if(al.length)hit(al[Math.floor(R()*al.length)],att,.94,"b",tgt,"御旗盾無")}
@@ -426,11 +428,16 @@ function battle(withLog){
       cur=u; phase="pre";
       L({t:"actor",n:u.n,side:u.side,unit:u.unit,T:u.T,kill:u.kills||0,heal:Object.values(u.st).reduce((a,x)=>a+x.h,0),spd:u.spd,conf:u.conf,para:u.para});
       SEC("行動前");
-      if(u.n==="立花誾千代"&&R()<.6){fire(u,"疾風迅雷");for(const t of sample(foes(u),2)){hit(u,t,.76,"b",u,"疾風迅雷");if(R()<.7)control(t,"para",1,"麻痺")}}
+      if(u.n==="立花誾千代"&&R()<JF.rate){
+        const cast=(tgts)=>{fire(u,"疾風迅雷");let pz=null;for(const t of tgts){const was=t.para>0;hit(u,t,.76,"b",u,"疾風迅雷");
+            if(was){pz=t;const ms=mates(u);if(ms.length)heal(u,ms.reduce((a,b)=>a.T<b.T?a:b),.96*JF.heal,"疾風迅雷",u.wu)}
+            else if(R()<.5*(1+u.wu/1000))control(t,"para",1,"麻痺")}return pz};
+        const pz=cast(sample(foes(u),2));
+        if(pz&&u.boss&&R()<.16*(1+u.wu/1000)){const fs=foes(u);if(fs.length){L(`${nm(u)}【疾風迅雷】大將技：額外發動一次`);cast([fs[Math.floor(R()*fs.length)]])}}}
       if(u.n==="伊達政宗"){fire(u,"伊達風采");hit(u,pick(u,foes(u)),.92,"b",u,"伊達風采");hit(u,pick(u,foes(u)),.92,"m",u,"伊達風采");
         st.hits++; if(st.hits%2===0&&st.stack<4){st.stack++; if(st.stack===4){hit(u,pick(u,foes(u)),1.34,"b",u,"伊達風采");hit(u,pick(u,foes(u)),1.34,"m",u,"伊達風采")}}}
       if(u.n==="德川家康"&&R()<.48){fire(u,"戮力同心");for(const x of sample(mates(u),2))heal(u,x,.82*1.42,"戮力同心",u.tong)}
-      if(u.n==="北條氏康"&&(r===3||r===4)){fire(u,"一領具足");for(const x of mates(u))x.merc+=150;L(`${nm(u)}執行來自【一領具足】的效果，我軍全體獲得傭兵`)}
+      if(u.n==="北條氏康"&&(r===3||r===4)){for(const x of mates(u))x.merc+=150;L(`${nm(u)}執行來自【一領具足】的效果，我軍全體獲得傭兵`)}
       if(u.n==="北條氏康"&&r===1)fire(u,"一領具足");
       if(u.para&&R()<.3){u.para--;L(`${nm(u)}處於「麻痺」狀態，無法行動`);continue}
       phase="act";
@@ -441,7 +448,8 @@ function battle(withLog){
         if(!ran.has("所向披靡")&&R()<.30){SEC("S 所向披靡");L(`${nm(u)}「所向披靡-預備」效果已施加`);u.prep.push(["所向披靡",()=>{for(const t of foes(u))hit(u,t,2.54,"b",u,"所向披靡")}])}
       }
       if(u.n==="立花誾千代"&&!ran.has("五里霧中")&&R()<.35){SEC("S 五里霧中");L(`${nm(u)}「五里霧中-預備」效果已施加`);u.prep.push(["五里霧中",()=>{for(const t of sample(foes(u),2))control(t,"conf",2,"混亂")}])}
-      if(u.n==="北條氏康"&&R()<.5){fire(u,"相模之獅");for(const x of sample(mates(u),3))x.wall=2;L(`我軍群體「鐵壁(2)」效果已施加`)}
+      if(u.n==="北條氏康"&&R()<.5){fire(u,"相模之獅");for(const x of sample(mates(u),2+(R()<.5?1:0))){
+          if(x.wall>0){const t=pick(u,foes(u));L(`${nm(x)}已處於「鐵壁」狀態`);hit(u,t,1.78,"m",u,"相模之獅")}else{x.wall=2;L(`${nm(x)}「鐵壁(2)」效果已施加`)}}}
       if(u.n==="伊達政宗"&&R()<.40+bon){fire(u,"攻其不備");const fs=foes(u);if(fs.length){hit(u,fs.reduce((a,b)=>a.tong<b.tong?a:b),1.68,"b",u,"攻其不備");hit(u,fs.reduce((a,b)=>a.zhi<b.zhi?a:b),1.68,"m",u,"攻其不備")}}
       if(u.n==="德川家康"&&!ran.has("以逸待勞")&&R()<.35){SEC("S 以逸待勞");L(`${nm(u)}「以逸待勞-預備」效果已施加`);u.prep.push(["以逸待勞",()=>{
         for(const x of sample(foes(u),2)){x.dredT=.37;x.dredR=st.rnd+1;L(`${nm(x)}造成的傷害降低了37.00%`)}
@@ -463,7 +471,10 @@ function battle(withLog){
       if(t&&!u.conf&&u.side==="o"){const tc=by("本多忠勝");if(tc&&alive(tc)&&t!==tc&&tc.fl["剛猛"]&&R()<.33)t=tc}
       if(t){fire(u,"普通攻擊");hit(u,t,1,"b",u,"普通攻擊",true);
         if(u.n==="立花道雪"&&R()<.65&&!u.flags[r]){u.flags[r]=1;fire(u,"電光雷轟");
-          for(const x of new Set([t,pick(u,foes(u))])){if(!x)continue;if(x.para){for(const y of foes(u))hit(u,y,.62,"b",u,"電光雷轟")}else control(x,"para",2,"麻痺")}}
+          for(const x of [t,pick(u,foes(u))]){if(!x||!alive(x))continue;
+            if(x.para){L(`${nm(x)}已處於「麻痺」狀態，觸發雷鳴`);for(const y of foes(u))hit(u,y,.62,"b",u,"電光雷轟");
+              const np=foes(u).filter(y=>!y.para);if(np.length)control(np[Math.floor(R()*np.length)],"para",2,"麻痺")}
+            else control(x,"para",2,"麻痺")}}
         if(u.n==="立花誾千代"&&u.fl["近衛"]&&R()<.2)control(t,"para",2,"麻痺");
         if(u.n==="本多忠勝"&&R()<.30){fire(u,"乘勝追擊");for(const y of foes(u))hit(u,y,1.36,"b",u,"乘勝追擊")}
         if(u.n==="真田昌幸"&&R()<.35){fire(u,"戰意崩壞");t.debuf=2;CT.t["降屬性"]=(CT.t["降屬性"]||0)+2;u.ctlBy+=2;L(`${nm(t)}統率、智略減少了65`)}

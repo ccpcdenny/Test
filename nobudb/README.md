@@ -17,6 +17,9 @@
 | `MECHANICS.md` | 已確認／假設的戰鬥機制整理 |
 | `verify_attrs.py` | 戰鬥屬性流程驗算 |
 | `replay.py` | 重播驗證器：用真實戰報的隨機結果重算傷害並對答案（`--fit` 重新擬合參數），輸出 `battles/001_replay.json／.txt` |
+| `fit/fit_damage.py` | 三場戰報 32 筆兵刃傷害合併擬合 |
+| `sim/battle_sim.html` | 對戰模擬器原型（直接用瀏覽器開啟） |
+| `EQUIPMENT_SPECIALTIES.md` | 裝備特技（頂級鍛造、賽季專屬） |
 | `data/officers.json` | 武將完整資料：基礎六圍（Lv1）、每級成長、特性與解鎖星數、自帶／傳承戰法、評定眾技能 |
 
 ## 尚缺（模擬對戰需要，網站沒有）

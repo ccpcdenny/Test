@@ -1,0 +1,676 @@
+<title>NOBUDB 模擬對戰</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@600;900&family=Noto+Sans+TC:wght@400;500;700&display=swap">
+<style>
+/* 版面：固定 1000px 寬的戰報舞台，依螢幕等比縮放（橫置手機一次看到全畫面）；日誌與多次對戰在舞台下方 */
+:root{
+  --bg:#ece7dc; --paper:#f8f4ea; --paper2:#efe8d8; --ink:#231f1a; --muted:#6f675a; --line:#d6ccb8;
+  --ours:#2d5b8c; --them:#9e3326; --gold:#b0832a; --win:#c9952e; --lose:#7d7468; --bar-bg:#cfc6b4;
+  --serif:"Noto Serif TC","Songti TC",serif; --sans:"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#141518; --paper:#1f2024; --paper2:#26282d; --ink:#ece6da; --muted:#a59d90; --line:#393b41;
+  --ours:#86b4e3; --them:#e48a78; --gold:#dcb15a; --win:#e2b551; --lose:#8e877b; --bar-bg:#33353a; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#141518; --paper:#1f2024; --paper2:#26282d; --ink:#ece6da; --muted:#a59d90; --line:#393b41;
+  --ours:#86b4e3; --them:#e48a78; --gold:#dcb15a; --win:#e2b551; --lose:#8e877b; --bar-bg:#33353a; color-scheme:dark}
+html,body{overflow-x:hidden}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans)}
+.outer{padding-block:8px 32px;padding-left:max(8px,env(safe-area-inset-left,0px));padding-right:max(8px,env(safe-area-inset-right,0px))}
+#holder{margin:0 auto;position:relative}
+#stage{width:1000px;transform-origin:top left;position:absolute;left:0;top:0;display:grid;gap:8px}
+.banner{display:grid;grid-template-columns:1fr 150px 1fr;align-items:center;gap:14px;background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:8px 14px}
+.side{display:grid;gap:4px;min-width:0}
+.side .lab{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;gap:8px}
+.side .lab b{color:var(--ink);font-size:13px}
+.tbar{height:8px;border-radius:5px;background:var(--bar-bg);overflow:hidden}
+.tbar i{display:block;height:100%}
+.side.o .tbar i{background:var(--ours)} .side.t .tbar i{background:var(--them);margin-left:auto}
+.verdict{font-family:var(--serif);font-weight:900;font-size:32px;letter-spacing:.15em;line-height:1;text-align:center}
+.verdict small{display:block;font-family:var(--sans);font-size:11px;letter-spacing:0;color:var(--muted);font-weight:500;margin-top:4px}
+.field{display:grid;grid-template-columns:minmax(0,1fr) 2px minmax(0,1fr);gap:10px}
+.field .div{background:var(--line);border-radius:2px}
+.army{display:grid;gap:5px;min-width:0;align-content:start}
+.army h2{font-family:var(--serif);font-size:13px;margin:0;display:flex;gap:6px;align-items:baseline}
+.army.o h2{color:var(--ours)} .army.t h2{color:var(--them);justify-content:flex-end}
+.army h2 span{font-family:var(--sans);font-size:11px;color:var(--muted);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:8px;overflow:hidden;display:grid}
+.hd{padding:5px 7px 4px;display:grid;gap:3px}
+.row1{display:flex;justify-content:space-between;align-items:center;font-size:10.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+.badge{font-size:10px;font-weight:700;padding:0 5px;border-radius:3px;background:var(--gold);color:var(--paper)}
+.badge.sub{background:var(--muted)}
+.name{font-family:var(--serif);font-weight:900;font-size:15px;letter-spacing:.04em;text-align:center;line-height:1.2}
+.mini{height:4px;border-radius:2px;background:var(--bar-bg);overflow:hidden}
+.mini i{display:block;height:100%}
+.o .mini i{background:var(--ours)} .t .mini i{background:var(--them)}
+.pic{position:relative;height:118px;background:var(--paper2);overflow:hidden}
+.pic img{width:100%;height:100%;object-fit:cover;object-position:top;display:block}
+.pic .ph{position:absolute;inset:0;display:grid;place-items:center;font-family:var(--serif);font-weight:900;font-size:30px;letter-spacing:.08em;opacity:.3}
+.o .pic .ph{color:var(--ours)} .t .pic .ph{color:var(--them)}
+.pic .unit{position:absolute;top:5px;right:5px;font-size:10.5px;font-weight:700;padding:1px 5px;border-radius:3px;background:var(--them);color:#fff;line-height:1.4}
+.o .pic .unit{background:var(--ours)}
+.pic .dead{position:absolute;inset:0;display:none;place-items:center;background:rgba(20,18,16,.55);color:#f3ede2;font-family:var(--serif);font-weight:900;font-size:24px;letter-spacing:.3em}
+.card.isdead .pic .dead{display:grid}
+.card.isdead .pic img{filter:grayscale(1)}
+.sum{font-size:10.5px;text-align:center;padding:3px 4px;background:var(--paper2);color:var(--gold);font-weight:700;font-variant-numeric:tabular-nums}
+.tacs{display:grid;gap:3px;padding:5px}
+.tac{border:1px solid var(--line);border-radius:5px;padding:3px 6px;display:grid;grid-template-columns:1fr auto;gap:0 6px;font-size:10.5px;font-variant-numeric:tabular-nums;line-height:1.45}
+.tac .tn{font-weight:700;font-size:11.5px}
+.tac .k1,.tac .k3{text-align:right;color:var(--muted)} .tac .k2{color:var(--muted)}
+.tac.cmd .tn{color:#b5622a} .tac.act .tn{color:#9a4fa3} .tac.pas .tn{color:#3d6fa8} .tac.unit .tn{color:#2f8a6b} .tac.atk .tn{color:#c58a21}
+.ctrl{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.seg{display:flex;gap:0}.seg .btn{border-radius:0}.seg .btn:first-child{border-radius:7px 0 0 7px}.seg .btn:last-child{border-radius:0 7px 7px 0}
+.btn.opp[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.btn{font:inherit;font-weight:700;font-size:13px;padding:7px 18px;border-radius:7px;border:1px solid var(--line);background:var(--paper);color:var(--ink);cursor:pointer}
+.btn.main{background:var(--them);border-color:var(--them);color:#fff}
+.btn:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.below{max-width:1000px;margin:12px auto 0;display:grid;gap:12px}
+.panel{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.panel h3{font-family:var(--serif);margin:0 0 8px;font-size:15px}
+.mbar{display:flex;height:26px;border-radius:6px;overflow:hidden;font-size:13px;font-weight:700;color:#fff}
+.mbar div{display:flex;align-items:center;justify-content:center;white-space:nowrap;min-width:0}
+.note{font-size:12.5px;color:var(--muted)}
+.log{max-height:520px;overflow:auto;font-size:13px;line-height:1.7;font-variant-numeric:tabular-nums}
+.rtabs{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px}
+.rtabs button{font:inherit;font-size:13px;padding:5px 12px;border-radius:6px;border:1px solid var(--line);background:var(--paper2);color:var(--ink);cursor:pointer}
+.rtabs button[aria-pressed="true"]{background:var(--ours);border-color:var(--ours);color:#fff}
+.rban{font-family:var(--serif);font-weight:900;font-size:20px;letter-spacing:.3em;text-align:center;padding:6px;margin:4px 0 8px;border-radius:6px;background:linear-gradient(90deg,var(--ours) 0%,var(--paper2) 35%,var(--paper2) 65%,var(--them) 100%);color:var(--ink)}
+.order{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-bottom:8px;font-size:12px}
+.order span{display:flex;align-items:center;gap:4px;padding:2px 8px 2px 3px;border-radius:999px;border:1px solid var(--line);background:var(--paper)}
+.order i{font-style:normal;display:grid;place-items:center;width:18px;height:18px;border-radius:50%;color:#fff;font-size:11px;font-weight:700}
+.order .o i{background:var(--ours)} .order .t i{background:var(--them)}
+.blk{border:1px solid var(--line);border-radius:8px;margin-bottom:10px;overflow:hidden;background:var(--paper)}
+.bh{display:grid;grid-template-columns:auto 1fr repeat(3,72px);align-items:center;gap:8px;padding:6px 10px}
+.blk.o .bh{background:color-mix(in srgb,var(--ours) 14%,var(--paper))} .blk.t .bh{background:color-mix(in srgb,var(--them) 14%,var(--paper))}
+.bh .av{width:30px;height:30px;border-radius:6px;display:grid;place-items:center;font-family:var(--serif);font-weight:900;color:#fff;font-size:14px}
+.blk.o .av{background:var(--ours)} .blk.t .av{background:var(--them)}
+.bh .bn{font-family:var(--serif);font-weight:900;font-size:15px}
+.blk.o .bn{color:var(--ours)} .blk.t .bn{color:var(--them)}
+.bh .bn small{font-family:var(--sans);font-weight:500;font-size:11px;color:var(--muted);margin-left:6px}
+.bh .bn em{font-style:normal;font-family:var(--sans);font-size:11px;padding:0 5px;border-radius:3px;background:var(--them);color:#fff;margin-left:6px}
+.bh .stat{text-align:center;font-size:11px;color:var(--muted);line-height:1.3}
+.bh .stat b{display:block;font-size:14px;color:var(--ink);font-variant-numeric:tabular-nums}
+.bh .stat.k b{color:var(--them)} .bh .stat.h b{color:#2f8a6b}
+.bs{display:flex;justify-content:space-between;padding:4px 10px;font-size:13px;border-bottom:1px solid var(--line)}
+.bs .sp{color:var(--muted)}
+.sec{display:grid;grid-template-columns:118px 1fr;gap:10px;padding:6px 10px;border-bottom:1px dashed var(--line)}
+.sec:last-child{border-bottom:0}
+.pill{align-self:start;justify-self:start;font-size:12.5px;font-weight:700;padding:2px 10px;border-radius:999px;border:1px solid var(--line);background:var(--paper2);white-space:nowrap}
+.pill.pre{color:var(--muted)} .pill.s{color:#9a4fa3} .pill.a{color:#c58a21}
+.lines{display:grid;gap:2px;font-size:13px;line-height:1.6}
+.log .o{color:var(--ours)} .log .t{color:var(--them)}
+.log .dmg{color:var(--them)} .log .heal{color:#2f8a6b}
+.pblk{border:1px solid var(--line);border-radius:8px;margin-bottom:10px;overflow:hidden;background:var(--paper)}
+.ph2{font-family:var(--serif);font-weight:900;font-size:15px;padding:6px 10px;background:var(--paper2);border-bottom:1px solid var(--line)}
+.prow{display:grid;grid-template-columns:150px 1fr;gap:10px;padding:6px 10px;border-left:4px solid var(--ours);border-bottom:1px dashed var(--line);font-size:13px;line-height:1.6}
+.prow:last-child{border-bottom:0}
+.log .prow .ptxt{color:var(--ink)}
+.prow.t{border-left-color:var(--them)}
+.prow.o .pwho{color:var(--ours);font-weight:700} .prow.t .pwho{color:var(--them);font-weight:700}
+@media (max-width:600px){.prow{grid-template-columns:1fr;gap:2px}}
+#rate{position:fixed;inset:0;z-index:20;background:rgba(15,14,12,.55);display:grid;place-items:center;padding:max(10px,env(safe-area-inset-top,0px)) max(10px,env(safe-area-inset-right,0px)) max(10px,env(safe-area-inset-bottom,0px)) max(10px,env(safe-area-inset-left,0px))}
+#rate[hidden]{display:none!important}
+.rbox{background:var(--paper);border:1px solid var(--line);border-radius:12px;width:min(980px,100%);max-height:100%;overflow:auto;padding:14px 16px;display:grid;gap:12px}
+.rteam{display:flex;gap:6px;flex-wrap:wrap}
+.rteam button{font:inherit;font-size:13px;font-weight:700;padding:5px 12px;border-radius:999px;border:1px solid var(--line);background:var(--paper2);color:var(--ink);cursor:pointer}
+.rteam button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.rcards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.rc{border:1px solid var(--line);border-radius:8px;padding:8px;display:grid;gap:4px;background:var(--paper2)}
+.rc .nm{font-family:var(--serif);font-weight:900;font-size:16px}
+.rc.o .nm{color:var(--ours)} .rc.t .nm{color:var(--them)}
+.rc .tl{display:flex;gap:4px;flex-wrap:wrap}
+.rc .tl span{font-size:12px;padding:1px 7px;border-radius:4px;border:1px solid var(--line);background:var(--paper)}
+.rc .at{font-size:11.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+.rhead{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;border-bottom:1px solid var(--line);padding-bottom:8px}
+.rhead .t1{font-family:var(--serif);font-weight:900;font-size:20px}
+.rhead .tier{font-family:var(--serif);font-weight:900;font-size:34px;color:var(--ours)}
+.rhead .sc{font-size:15px;color:var(--ours);font-weight:700}
+.rhead .ss{font-size:13px;color:var(--muted)}
+.rgrid{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:14px}
+@media (max-width:640px){.rgrid{grid-template-columns:1fr}.rcards{grid-template-columns:1fr}}
+.bars{display:grid;gap:9px;border:1px solid var(--line);border-radius:8px;padding:12px}
+.brow{display:grid;grid-template-columns:6.6em 1fr 2.4em;gap:10px;align-items:center;font-size:14px}
+.brow .lab{letter-spacing:.2em;white-space:nowrap}
+.brow .tr{height:12px;border-radius:2px;background:var(--bar-bg);overflow:hidden}
+.brow .tr i{display:block;height:100%;background:#7fb5d5}
+.brow.hi .tr i{background:#d9472b} .brow.mid .tr i{background:#e98f6f}
+.brow .v{text-align:right;font-variant-numeric:tabular-nums;color:#5a9cc2;font-weight:700}
+.brow.hi .v{color:#d9472b} .brow.mid .v{color:#e98f6f}
+.tbls{display:grid;gap:10px;align-content:start}
+.xt{width:100%;border-collapse:collapse;font-size:14px;font-variant-numeric:tabular-nums;border:1px solid var(--line)}
+.xt th{padding:7px;background:color-mix(in srgb,var(--gold) 18%,var(--paper));color:var(--gold);font-weight:700}
+.xt.bad th{background:color-mix(in srgb,var(--ours) 14%,var(--paper));color:var(--ours)}
+.xt td{padding:7px;text-align:center;border-top:1px solid var(--line)}
+.rfoot{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.rdef{font-size:12px;color:var(--muted);line-height:1.6}
+#rep{display:grid;gap:14px;border-top:1px solid var(--line);padding-top:12px}
+.rp{display:grid;gap:10px}
+.rp h4{font-family:var(--serif);font-weight:900;font-size:19px;margin:0}
+.rp .big{font-size:16px;font-weight:900;color:#e2552d}
+.kv{display:grid;grid-template-columns:1fr 1fr;gap:8px 18px;border:1px solid var(--line);border-radius:8px;padding:12px 16px;font-size:14px}
+.kv b{font-size:17px;font-variant-numeric:tabular-nums}
+.kv .c1{color:#2f6fd0}.kv .c2{color:#e0a321}.kv .c3{color:#e2552d}.kv .c4{color:#5a7fb0}
+.ch{position:relative;height:240px}
+.ch.sm{height:220px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.two h5,.rp h5{font-family:var(--serif);font-size:15px;margin:0 0 4px;text-align:center}
+@media (max-width:640px){.two{grid-template-columns:1fr}.kv{grid-template-columns:1fr}}
+.dline{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;text-align:center;font-size:13.5px;font-weight:700;padding:7px;border-radius:6px}
+.dline.d{background:color-mix(in srgb,#e2552d 14%,var(--paper));color:#e2552d}
+.dline.r{background:color-mix(in srgb,#2f6fd0 12%,var(--paper));color:#2f6fd0}
+.resb{display:flex;height:14px;border-radius:3px;overflow:hidden;margin-top:6px}
+.resl{display:flex;gap:14px;flex-wrap:wrap;font-size:15px;font-weight:700}
+.xg{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px}
+.xg div{display:flex;justify-content:space-between;padding:6px 10px;font-size:14px;font-weight:700}
+.xg .g{background:color-mix(in srgb,#2f9a4a 16%,var(--paper))} .xg .g b{color:#2f9a4a}
+.xg .bd{background:color-mix(in srgb,#e2552d 14%,var(--paper))} .xg .bd b{color:#e2552d}
+.endl{font-family:var(--serif);font-weight:900;text-align:center;padding:8px;color:var(--gold)}
+@media (max-width:600px){.bh{grid-template-columns:auto 1fr repeat(3,56px)}.sec{grid-template-columns:1fr}}
+.log .o{color:var(--ours)} .log .t{color:var(--them)}
+.warn{font-size:12px;color:var(--muted);text-align:center;margin:0}
+</style>
+
+<div class="outer">
+  <div id="holder">
+    <div id="stage">
+      <section class="banner" aria-live="polite">
+        <div class="side o"><div class="lab"><b>立花隊・進攻</b><span id="ot"></span></div><div class="tbar"><i id="obar"></i></div></div>
+        <div class="verdict" id="verdict">—<small id="vsub"></small></div>
+        <div class="side t"><div class="lab"><span id="tt"></span><b id="tname">伊達隊・防守</b></div><div class="tbar"><i id="tbar"></i></div></div>
+      </section>
+      <section class="field">
+        <div class="army o"><h2>立花隊 <span>士氣 130・足輕 Lv10</span></h2><div class="cards" id="cards-o"></div></div>
+        <div class="div" aria-hidden="true"></div>
+        <div class="army t"><h2><span id="tsub">士氣 100・鐵炮 Lv10・屬性為推估</span> <b id="tlabel">伊達隊</b></h2><div class="cards" id="cards-t"></div></div>
+      </section>
+      <div class="ctrl">
+        <span class="seg" role="group" aria-label="選擇對手"><button class="btn opp" id="opp-date" data-k="date" aria-pressed="true">對手：伊達隊</button><button class="btn opp" id="opp-toku" data-k="toku" aria-pressed="false">對手：德川隊</button></span>
+        <button class="btn" id="b-log">對戰詳情</button>
+        <button class="btn" id="b-rate">隊伍評分</button>
+        <button class="btn main" id="b-one">重新對戰</button>
+        <button class="btn" id="b-many">多次對戰（1,000 場）</button>
+      </div>
+    </div>
+  </div>
+  <div id="rate" hidden role="dialog" aria-modal="true" aria-labelledby="rate-title">
+  <div class="rbox">
+    <div class="rteam" role="group" aria-label="選擇評分隊伍"><button id="rt-o" data-s="o" aria-pressed="true">立花隊</button><button id="rt-date" data-s="date" aria-pressed="false">伊達隊</button><button id="rt-toku" data-s="toku" aria-pressed="false">德川隊</button></div>
+    <div class="rcards" id="rcards"></div>
+    <div class="rhead"><span class="t1" id="rate-title">綜合評分</span><span class="tier" id="rtier">—</span><span class="sc" id="rscore"></span><span class="ss">｜依 <b id="rn">0</b> 場模擬計算</span></div>
+    <div class="rgrid">
+      <div class="bars" id="rbars"></div>
+      <div class="tbls">
+        <table class="xt"><thead><tr><th>優勢隊伍</th><th>兵力交換比</th></tr></thead><tbody id="rgood"></tbody></table>
+        <table class="xt bad"><thead><tr><th>劣勢隊伍</th><th>兵力交換比</th></tr></thead><tbody id="rbad"></tbody></table>
+      </div>
+    </div>
+    <p class="rdef">輸出＝每場對敵總傷害；爆發＝前 2 回合傷害；多穿＝群體戰法傷害佔比；回復＝每場治療量；控制＝每場成功施加麻痺、混亂次數；破壞力＝單次最高傷害；穩定性＝結束兵力的波動越小越高；兵力戰功比＝敵方損失 ÷ 我方損失。兵力交換比＝對該隊的敵方損失 ÷ 我方損失。等級門檻：T0 ≥7.5、T1 ≥6.5、T2 ≥5.5、T3 ≥4.5。目前只有 3 支隊伍可比，分數與門檻會隨隊伍資料增加而調整。</p>
+    <section id="rep" hidden></section>
+    <div class="rfoot"><button class="btn main" id="b-rerate">重新評分</button><button class="btn" id="b-rep">詳細報告</button><button class="btn" id="b-rclose">返回</button></div>
+  </div>
+</div>
+<div class="below">
+    <section class="panel" id="multi" hidden>
+      <h3>多次對戰結果</h3>
+      <div class="mbar" id="mbar"></div>
+      <div class="note" id="mnote" style="margin-top:6px"></div>
+    </section>
+    <section class="panel" id="logp">
+      <h3>對戰詳情</h3>
+      <div class="rtabs" id="rtabs" role="group" aria-label="選擇回合"></div>
+      <div class="log" id="log"></div>
+    </section>
+    <p class="warn">NOBUDB 模擬對戰測試版｜粗估：兵刃公式誤差約 8%，謀略公式尚未量測（暫用兵刃公式），對手屬性（Lv50＋加點 100、兵種 Lv10、協力 7%）與兵學為推估。</p>
+  </div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script>
+// ---------- 公式（003 擬合：兵力^0.665 ×（武勇＋137）× e^(−統率/224)）----------
+const C=0.339e-3, AO=136.632, S=224.228, Q=0.665, ADV=1.224, DIS=0.956, TS=Math.pow(10000,1-Q);
+const H=1466/(2.6*Math.pow(9200,Q)*TS*(328.91+AO));
+const base=(T,A,D)=>C*Math.pow(Math.max(T,0),Q)*TS*(A+AO)*Math.exp(-D/S);
+const healAmt=(T,I,r)=>H*Math.pow(Math.max(T,0),Q)*TS*(I+AO)*r;
+const K=1.27;
+const OURS=[
+ {n:"立花道雪",side:"o",unit:"足輕",wu:408.94,zhi:191.6,tong:266.30,spd:162.19,rb:.9555,rm:.9099,crit:.05,img:"img/tachibana-dosetsu.webp",
+  tacs:[["電光雷轟","atk2"],["霹靂一擊","act"],["所向披靡","act"],["普通攻擊","atk"]]},
+ {n:"立花誾千代",side:"o",unit:"足輕",boss:1,wu:420.18,zhi:179.5,tong:222.42,spd:161.76,rb:.9555,rm:.9099,crit:0,img:"img/tachibana-ginchiyo.webp",
+  tacs:[["疾風迅雷","cmd"],["御旗盾無","pas"],["五里霧中","act"],["普通攻擊","atk"]]},
+ {n:"北條氏康",side:"o",unit:"足輕",wu:173.96,zhi:241.27,tong:388.31,spd:159.83,rb:.9555,rm:.9099,crit:0,img:"img/hojo-ujiyasu.webp",
+  tacs:[["相模之獅","act"],["一領具足","cmd"],["三河武士","unit"],["普通攻擊","atk"]]},
+];
+const OPP={
+ date:{label:"伊達隊",unit:"鐵炮",mo:DIS,mt:ADV,morale:100,note:"鐵炮剋足輕：對方傷害 ×1.22、我方 ×0.96",units:[
+ {n:"伊達政宗",side:"t",unit:"鐵炮",boss:1,wu:234*K,zhi:235*K,tong:188*K,spd:117*K,rb:.982,rm:1,crit:.029,dealt:.15,img:"img/date-masamune.webp",
+  tacs:[["伊達風采","cmd"],["攻其不備","act"],["龍騎兵","unit"],["普通攻擊","atk"]]},
+ {n:"真田昌幸",side:"t",unit:"鐵炮",wu:105*K,zhi:331*K*1.02,tong:176*K,spd:76*K,rb:.982,rm:1,crit:0,img:"img/sanada-masayuki.webp",
+  tacs:[["表裡比興","act"],["誘敵深入","act"],["戰意崩壞","atk2"],["普通攻擊","atk"]]},
+ {n:"三好實休",side:"t",unit:"鐵炮",wu:116*K,zhi:287*K*1.02,tong:163*K,spd:75*K,rb:.982,rm:1,crit:0,img:"img/miyoshi-jikkyu.webp",
+  tacs:[["風流武者","pas"],["回天轉運","act"],["瞬息萬變","act"],["普通攻擊","atk"]]}]},
+ toku:{label:"德川隊",unit:"足輕",mo:1,mt:1,morale:100,note:"同為足輕，無兵種相剋",units:[
+ {n:"德川家康",side:"t",unit:"足輕",boss:1,wu:155*K,zhi:169*K,tong:331*K+5,spd:61*K,rb:.975*.984,rm:.975*.984,crit:0,dealt:.014,img:"img/tokugawa-ieyasu.webp",
+  tacs:[["三河魂","cmd"],["戮力同心","cmd"],["以逸待勞","act"],["普通攻擊","atk"]]},
+ {n:"本多忠勝",side:"t",unit:"足輕",wu:329*K,zhi:116*K,tong:169*K+5,spd:81*K,rb:.975*.98,rm:.975*.964,crit:0,dealt:.014,img:"img/honda-tadakatsu.webp",
+  tacs:[["古今獨步","pas"],["乘勝追擊","atk2"],["堅忍不拔","pas"],["普通攻擊","atk"]]},
+ {n:"本多正信",side:"t",unit:"足輕",wu:43*K,zhi:292*K*1.03,tong:83*K+5,spd:86*K,rb:.975*.98,rm:.975*.964*.96,crit:0,dealt:.014,img:"img/honda-masanobu.webp",
+  tacs:[["非常之器","cmd"],["深謀遠慮","cmd"],["所領役帳","act"],["普通攻擊","atk"]]}]},
+};
+let OPPK="date";
+const T0=10254;
+
+function battle(withLog){
+  const O=OPP[OPPK];
+  const U=OURS.concat(O.units).map(d=>({...d,T:T0,para:0,conf:0,wall:0,imm:0,debuf:0,merc:0,prep:[],st:{},flags:{},drain:0,evade:0,dredP:0,dredT:0,dredR:0,hitsIn:0,tongUp:0}));
+  U.forEach(u=>u.tacs.forEach(t=>u.st[t[0]]={f:0,k:0,h:0}));
+  const by=n=>U.find(u=>u.n===n), ours=U.filter(u=>u.side==="o"), them=U.filter(u=>u.side==="t");
+  by("立花道雪").imm=1; by("北條氏康").imm=1;
+  const log=[], L=s=>{if(withLog)log.push(s)}, R=Math.random;
+  const nm=u=>`<span class="${u.side}">[${u.n}]</span>`;
+  let cur=null, phase="";
+  const SEC=(label)=>L({t:"sec",label});
+  const alive=u=>u.T>0, foes=u=>(u.side==="o"?them:ours).filter(alive), mates=u=>(u.side==="o"?ours:them).filter(alive);
+  const pick=(u,pool)=>{if(u.conf)pool=U.filter(x=>alive(x)&&x!==u);return pool.length?pool[Math.floor(R()*pool.length)]:null};
+  const sample=(a,k)=>a.slice().sort(()=>R()-.5).slice(0,k);
+  const MULTI=new Set(["疾風迅雷","所向披靡","電光雷轟","乘勝追擊","誘敵深入","三河武士"]);
+  U.forEach(u=>{u.dmgR=Array(9).fill(0);u.healR=Array(9).fill(0);u.healTheo=0;u.TR=[T0];u.ctlBy=0});
+  const CT={o:{},t:{}};
+  const M={o:{dmg:0,burst:0,multi:0,heal:0,ctl:0,maxhit:0},t:{dmg:0,burst:0,multi:0,heal:0,ctl:0,maxhit:0}};
+  const st={stack:0,hits:0,furyu:0,fcnt:0,yudeki:0,mk:0,mkNeed:3,mkFire:0,mkDmg:0,rnd:0};
+  const D=them.find(x=>x.boss);
+  const credit=(owner,tac,k,h)=>{const s=owner.st[tac];if(s){s.k+=k;s.h+=h}};
+  function hit(att,tgt,rate,kind,owner,tac,normal){
+    if(!tgt||!alive(tgt))return 0;
+    if(normal)L(`${nm(att)}對${nm(tgt)}發動普通攻擊`);
+    if(normal&&tgt.n==="德川家康"){const h=by("本多忠勝");if(h&&alive(h)&&R()<.8){L(`${nm(h)}執行來自【三河魂】的「援護」效果，代替${nm(tgt)}承受攻擊`);fire(by("德川家康"),"三河魂");tgt=h}}
+    if(tgt.evade&&R()<tgt.evade){L(`${nm(tgt)}處於規避狀態，本次傷害無效`);L(`${nm(tgt)}損失了兵力0（${tgt.T}）`);return 0}
+    if(tgt.wall>0){tgt.wall--; if(R()<.85){L(`${nm(tgt)}執行來自【相模之獅】的「鐵壁」效果`);L(`${nm(tgt)}損失了兵力0（${tgt.T}）`);return 0}}
+    let A=kind==="b"?att.wu:att.zhi; if(att.n==="伊達政宗")A*=1+.05*st.stack;
+    A*=1-.0355*att.drain;
+    const Df=((kind==="b"?tgt.tong*(1+.16*tgt.tongUp):tgt.zhi)-(tgt.debuf?65:0))*(1-.0355*tgt.drain);
+    let d=base(att.T,A,Df)*rate*(1+(att.dealt||0)-(att.conf&&att.side==="t"?.08:0));
+    d*=Math.max(0,1-att.dredP-(att.dredR>=st.rnd?att.dredT:0));
+    if(kind==="m"&&att.side==="t")d*=1+.3*st.furyu;
+    if(att.side!==tgt.side)d*=att.side==="o"?O.mo:O.mt;
+    d*=kind==="b"?tgt.rb:tgt.rm;
+    if(tgt.conf&&tgt.side==="t")d*=1.06;
+    if(R()<att.crit)d*=1.5;
+    if(tgt.n==="立花誾千代"&&R()<.5){d*=1-.4785;by("立花誾千代").st["御旗盾無"].f++;L(`${nm(tgt)}執行來自【御旗盾無】的「受到傷害降低」效果`);L(`${nm(tgt)}受到的傷害降低了47.85%`)}
+    d=Math.floor(d);
+    let ab=0; if(tgt.merc){ab=Math.min(tgt.merc,d);tgt.merc-=ab;d-=ab}
+    d=Math.min(d,tgt.T); tgt.T-=d; credit(owner,tac,d+ab,0); att.kills=(att.kills||0)+d+ab;
+    if(att.side!==tgt.side){const m=M[att.side],g=d+ab;att.dmgR[st.rnd]+=g;m.dmg+=g;if(st.rnd<=2)m.burst+=g;if(MULTI.has(tac))m.multi+=g;if(g>m.maxhit)m.maxhit=g}
+    if(ab)L(`${nm(tgt)}的傭兵抵消了 ${ab} 點傷害`);
+    L(normal?`${nm(tgt)}損失了兵力<b class="dmg">${d}</b>（${tgt.T}）`:`${nm(tgt)}由於${nm(att)}【${tac}】的傷害，損失了兵力<b class="dmg">${d}</b>（${tgt.T}）`);
+    if(normal&&tgt.side==="t"&&att.side==="o"&&OPPK==="toku"){
+      const ie=by("德川家康"); if(tgt!==ie&&alive(ie)&&att.drain<8){att.drain++;fire(ie,"三河魂")}
+      if(tgt.n==="本多忠勝"&&alive(tgt)){
+        if(R()<.48){fire(tgt,"古今獨步");hit(tgt,att,.70,"b",tgt,"古今獨步")}
+        fire(tgt,"堅忍不拔");hit(tgt,att,.92,"b",tgt,"堅忍不拔");
+        tgt.hitsIn++; if(tgt.hitsIn%4===0&&tgt.tongUp<3)tgt.tongUp++;
+      }
+    }
+    if(normal&&tgt.side==="o"&&att.side==="t"){
+      st.mk++;
+      if(tgt.n==="立花誾千代"){
+        if(!tgt.flags.aisai&&st.rnd===1){tgt.flags.aisai=1;hit(tgt,att,.662,"b",tgt,"普通攻擊")}
+        if(R()<.49){const al=mates(tgt).filter(x=>x!==tgt);if(al.length)hit(al[Math.floor(R()*al.length)],att,.94,"b",tgt,"御旗盾無")}
+      }
+    }
+    return d;
+  }
+  function heal(h,tgt,rate,tac,stat){if(!tgt||!alive(tgt))return;const raw=Math.floor(healAmt(h.T,stat||h.zhi,rate)),v=Math.min(raw,T0-tgt.T);h.healTheo+=raw;h.healR[st.rnd]+=v;tgt.T+=v;credit(h,tac,0,v);M[h.side].heal+=v;L(`${nm(tgt)}執行來自${nm(h)}【${tac}】的治療，恢復了兵力<b class="heal">${v}</b>（${tgt.T}）`)}
+  function control(t,what,n,label){if(!t||!alive(t))return;if(t.imm){t.imm=0;L(`${nm(t)}的「免疫」抵消了「${label}」`);return}t[what]=Math.max(t[what],n);M[t.side==="o"?"t":"o"].ctl++;{const sd=t.side==="o"?"t":"o",c=CT[sd];c[label]=(c[label]||0)+n;if(cur&&cur.side===sd)cur.ctlBy+=n}L(`${nm(t)}「${label}」效果已施加`)}
+  const best=u=>u.wu>=u.zhi?"b":"m";
+  const KIND={};OURS.concat(...Object.values(OPP).map(o=>o.units)).forEach(d=>d.tacs.forEach(([t,c])=>KIND[t]=c));
+  function fire(u,t){if(u&&u.st[t])u.st[t].f++;
+    if(u===cur&&phase==="act"&&["act","atk","atk2"].includes(KIND[t]))SEC((t==="普通攻擊"?"A ":"S ")+t);}
+  SEC("戰法影響");
+  if(OPPK==="toku"){const m=by("本多正信");for(const x of sample(ours,2)){x.dredP=.268;L(`${nm(x)}受到${nm(m)}【深謀遠慮】影響，造成的傷害降低了26.80%`)}}
+  const curve=[[T0*3,T0*3]]; let result="平手";
+  for(let r=1;r<=8;r++){
+    st.rnd=r; L({t:"round",r}); cur=null; phase="pre";
+    L({t:"order",list:U.filter(alive).sort((a,b)=>b.spd-a.spd).map(x=>({n:x.n,side:x.side}))});
+    SEC("回合開始");
+    if(st.mkFire){st.mkFire=0;const o=by("北條氏康");fire(o,"三河武士");
+      for(const x of ours.filter(alive)){if(st.mkDmg)hit(x,pick(x,foes(x)),.82,best(x),o,"三河武士");else heal(o,x,.6*1.388*1.1,"三河武士")}}
+    if(r%2===1)st.fcnt=0;
+    if(st.yudeki){st.yudeki=0;const s=by("真田昌幸");for(const x of mates(s))hit(x,pick(x,foes(x)),1.74,best(x),s,"誘敵深入")}
+    if(OPPK==="date")for(const x of them.filter(alive)){if(R()<.6){fire(D,"龍騎兵");hit(x,pick(x,foes(x)),1.04,best(x),D,"龍騎兵")}}
+    if(OPPK==="toku"){const m=by("本多正信");
+      if(r<=3)fire(m,"深謀遠慮"); if(r===4)ours.forEach(x=>x.dredP=0);
+      if(r<=2){fire(m,"非常之器");them.forEach(x=>x.evade=.35)} else them.forEach(x=>x.evade=0);
+      if(r>=3&&r<=5&&alive(m)){fire(m,"非常之器");for(const x of mates(m))heal(m,x,.66,"非常之器")}}
+    const order=U.filter(alive).sort((a,b)=>b.spd-a.spd);
+    for(const u of order){
+      if(!alive(u))continue;
+      cur=u; phase="pre";
+      L({t:"actor",n:u.n,side:u.side,unit:u.unit,T:u.T,kill:u.kills||0,heal:Object.values(u.st).reduce((a,x)=>a+x.h,0),spd:u.spd,conf:u.conf,para:u.para});
+      SEC("行動前");
+      if(u.n==="立花誾千代"&&R()<.6){fire(u,"疾風迅雷");for(const t of sample(foes(u),2)){hit(u,t,.76,"b",u,"疾風迅雷");if(R()<.7)control(t,"para",1,"麻痺")}}
+      if(u.n==="伊達政宗"){fire(u,"伊達風采");hit(u,pick(u,foes(u)),.92,"b",u,"伊達風采");hit(u,pick(u,foes(u)),.92,"m",u,"伊達風采");
+        st.hits++; if(st.hits%2===0&&st.stack<4){st.stack++; if(st.stack===4){hit(u,pick(u,foes(u)),1.34,"b",u,"伊達風采");hit(u,pick(u,foes(u)),1.34,"m",u,"伊達風采")}}}
+      if(u.n==="德川家康"&&R()<.48){fire(u,"戮力同心");for(const x of sample(mates(u),2))heal(u,x,.82*1.42,"戮力同心",u.tong)}
+      if(u.n==="北條氏康"&&(r===3||r===4)){fire(u,"一領具足");for(const x of mates(u))x.merc+=150;L(`${nm(u)}執行來自【一領具足】的效果，我軍全體獲得傭兵`)}
+      if(u.n==="北條氏康"&&r===1)fire(u,"一領具足");
+      if(u.para&&R()<.3){u.para--;L(`${nm(u)}處於「麻痺」狀態，無法行動`);continue}
+      phase="act";
+      const ran=new Set(u.prep.map(x=>x[0])); for(const [pn,f] of u.prep){fire(u,pn);f()} u.prep=[];
+      const bon=(u.n==="三好實休"&&r<=4)?.045:0; let fired=0;
+      if(u.n==="立花道雪"){
+        if(R()<.35){fire(u,"霹靂一擊");const t=pick(u,foes(u));hit(u,t,2.28,"b",u,"霹靂一擊");control(t,"para",2,"麻痺")}
+        if(!ran.has("所向披靡")&&R()<.30){SEC("S 所向披靡");L(`${nm(u)}「所向披靡-預備」效果已施加`);u.prep.push(["所向披靡",()=>{for(const t of foes(u))hit(u,t,2.54,"b",u,"所向披靡")}])}
+      }
+      if(u.n==="立花誾千代"&&!ran.has("五里霧中")&&R()<.35){SEC("S 五里霧中");L(`${nm(u)}「五里霧中-預備」效果已施加`);u.prep.push(["五里霧中",()=>{for(const t of sample(foes(u),2))control(t,"conf",2,"混亂")}])}
+      if(u.n==="北條氏康"&&R()<.5){fire(u,"相模之獅");for(const x of sample(mates(u),3))x.wall=2;L(`我軍群體「鐵壁(2)」效果已施加`)}
+      if(u.n==="伊達政宗"&&R()<.40+bon){fire(u,"攻其不備");const fs=foes(u);if(fs.length){hit(u,fs.reduce((a,b)=>a.tong<b.tong?a:b),1.68,"b",u,"攻其不備");hit(u,fs.reduce((a,b)=>a.zhi<b.zhi?a:b),1.68,"m",u,"攻其不備")}}
+      if(u.n==="德川家康"&&!ran.has("以逸待勞")&&R()<.35){SEC("S 以逸待勞");L(`${nm(u)}「以逸待勞-預備」效果已施加`);u.prep.push(["以逸待勞",()=>{
+        for(const x of sample(foes(u),2)){x.dredT=.37;x.dredR=st.rnd+1;L(`${nm(x)}造成的傷害降低了37.00%`)}
+        for(const x of sample(mates(u),3))heal(u,x,1.88,"以逸待勞",u.tong)}])}
+      if(u.n==="本多正信"&&R()<.35){fire(u,"所領役帳");const ms=mates(u),t=ms.reduce((a,b)=>(a.T-T0)<(b.T-T0)?a:b);heal(u,t,2.12,"所領役帳")}
+      if(u.n==="真田昌幸"){
+        if(R()<.55){fire(u,"表裡比興");const t=pick(u,foes(u));if(t){const was=t.conf;hit(u,t,1.42,"m",u,"表裡比興");control(t,"conf",1,"混亂");if(was)hit(u,pick(u,foes(u)),1.92,"m",u,"表裡比興")}fired++}
+        if(R()<.40){fire(u,"誘敵深入");st.yudeki=1;L(`${nm(u)}「誘敵深入-預備」效果已施加`);fired++}
+      }
+      if(u.n==="三好實休"){
+        if(R()<.40+bon){fire(u,"回天轉運");const ms=mates(u),t=ms.reduce((a,b)=>(a.T-T0)<(b.T-T0)?a:b);heal(u,t,2.6,"回天轉運");t.conf=0;t.para=0;fired++}
+        if(R()<.45+bon){fire(u,"瞬息萬變");const t=pick(u,foes(u));if(t){const was=t.conf;hit(u,t,1.62,"m",u,"瞬息萬變");control(t,"conf",1,"混亂");
+          if(was){const ox=foes(u).filter(x=>x!==t);if(ox.length){const o=ox[Math.floor(R()*ox.length)];hit(o,t,1.58,best(o),u,"瞬息萬變")}}}fired++}
+        if(fired){st.fcnt++;const f=u.st["風流武者"];
+          if(st.fcnt===1&&R()<.8){f.f++;for(const x of sample(mates(u),2))heal(u,x,1.32,"風流武者")}
+          else if(st.fcnt===2&&R()<.8){f.f++;st.furyu=Math.min(2,st.furyu+1)}}
+      }
+      let t=pick(u,foes(u));
+      if(t&&!u.conf&&u.side==="o"){const tc=by("本多忠勝");if(tc&&alive(tc)&&t!==tc&&R()<.33)t=tc}
+      if(t){fire(u,"普通攻擊");hit(u,t,1,"b",u,"普通攻擊",true);
+        if(u.n==="立花道雪"&&R()<.65&&!u.flags[r]){u.flags[r]=1;fire(u,"電光雷轟");
+          for(const x of new Set([t,pick(u,foes(u))])){if(!x)continue;if(x.para){for(const y of foes(u))hit(u,y,.62,"b",u,"電光雷轟")}else control(x,"para",2,"麻痺")}}
+        if(u.n==="立花誾千代"&&R()<.2)control(t,"para",2,"麻痺");
+        if(u.n==="本多忠勝"&&R()<.30){fire(u,"乘勝追擊");for(const y of foes(u))hit(u,y,1.36,"b",u,"乘勝追擊")}
+        if(u.n==="真田昌幸"&&R()<.35){fire(u,"戰意崩壞");t.debuf=2;CT.t["降屬性"]=(CT.t["降屬性"]||0)+2;u.ctlBy+=2;L(`${nm(t)}統率、智略減少了65`)}
+      }
+      if(st.mk>=st.mkNeed){st.mk=0;st.mkNeed++;st.mkFire=1;if(st.mkNeed>=7)st.mkDmg=1}
+      if(u.conf)u.conf--; if(u.para)u.para--;
+      if(!alive(by("立花誾千代"))||!alive(D))break;
+    }
+    U.forEach(u=>{if(u.debuf)u.debuf--});
+    curve.push([ours.reduce((s,u)=>s+u.T,0),them.reduce((s,u)=>s+u.T,0)]);
+    U.forEach(u=>u.TR.push(u.T));
+    if(!alive(by("立花誾千代"))){result="失敗";L({t:"end",text:"大將立花誾千代兵力歸零，立花隊敗北"});break}
+    if(!alive(D)){result="勝利";L({t:"end",text:`大將${D.n}兵力歸零，立花隊勝利`});break}
+    if(r===8)L({t:"end",text:"8 回合結束，雙方大將皆未潰敗，平手"});
+  }
+  U.forEach(u=>{while(u.TR.length<9)u.TR.push(u.T)});
+  return {U,result,log,curve,M,CT};
+}
+
+
+// ---------- 準備階段（我方取自實際戰報；對手為推估，標「推估」）----------
+const QI="[立花誾千代]", QD="[立花道雪]", QH="[北條氏康]";
+const PREP_O={
+ "士氣影響":[["o",`${QI}隊`,"士氣130.00，造成傷害100%"]],
+ "兵種影響":[["o",`${QI}隊`,"足輕 Lv10　屬性調整為120.00%"]],
+ "軍學影響":[["o",`${QI}隊`,"獲得【軍學訓練-足輕】增益效果，【統率】屬性提升了5"],["o",`${QI}隊`,"獲得【軍學訓練-足輕】增益效果，受到的傷害降低了2.50%"]],
+ "評定眾影響":[["o","S 成果加俸・優",`${QI}隊受到了相馬盛胤的評定眾技能【成果加俸・優】影響<br>${QI}${QD}${QH}經驗加成增加了12.60%`],
+   ["o","S 百萬一心之訓",`${QI}隊受到了毛利元就的評定眾技能【百萬一心之訓】影響<br>${QI}武勇提高了2.25%(7.16)(389.63)、速度 +2.76、統率 +3.50、智略 +3.12、政務 +2.45、魅力 +3.10<br>${QD}武勇提高了2.25%(6.91)(375.88)、速度 +2.82、統率 +4.26、智略 +3.33、政務 +3.48、魅力 +3.05<br>（${QH}為北條家，不受影響）`]],
+ "設施影響":[["o","[協力-群雄]Lv.10",`${QH}${QD}${QI}獲得經驗提升10.0%<br>${QI}隊屬性提升7.0%`]],
+ "裝備影響":[["o",QI,"長烏帽子形兜【相殺】・三國黑【空蟬】・萬芳錦裁【萬芳錦裁】"],["o",QD,"雷切【雷刀】・大水牛脇立兜【強固】・太平樂【銳鋒】"],["o",QH,"山姥切長義【獅心】・大水牛脇立兜【亂雲】・星崎【堅固】"]],
+ "兵學影響":[["o",QD,"陣立｜生生不息-預備｜俊才II 受到兵刃傷害降低了2.00%(-4.45%)｜才氣II 受到謀略傷害降低了3.60%(-6.01%)｜恩顧I 受到的治療提高了4.00%"],
+   ["o",QH,"陣立｜生生不息-預備｜俊才II 受到兵刃傷害降低了2.00%(-4.45%)｜才氣II 受到謀略傷害降低了3.60%(-6.01%)｜兵心I 受到指揮、被動戰法的傷害降低了3.50%"],
+   ["o",QI,"陣立｜挫其銳氣-預備｜俊才II 受到兵刃傷害降低了2.00%(-4.45%)｜才氣II 受到謀略傷害降低了3.60%(-6.01%)｜恩顧I 受到的治療提高了4.00%"]],
+ "戰法影響":[["o",QI,"B 守禦：獲得【軍學訓練-足輕】增益效果，發動戰法【守禦】"],
+   ["o",QD,"雷電化身-預備｜武威II 武勇提高了2.50%(9.94)(407.34)｜盡力III 會心增加了5.00%｜雷刀「雷刀」效果已施加｜強固 受到指揮戰法的傷害降低了4.00%｜銳鋒 武勇增加了1.60(408.94)｜電光雷轟「戰法發動限制」效果已施加"],
+   ["o",QH,"祿壽應穩｜上下一心：[立花道雪][北條氏康]「免疫」控制類效果(1)已施加｜堅固II 我軍全體受到謀略傷害減少了3.00%(-9.01%)｜獅心「自帶主動戰法發動機率增加」｜堅固 統率增加了2.30(372.31)"],
+   ["o",QI,"近衛齊射-預備｜姬城督-預備｜武威I 武勇提高了2.00%(8.24)(420.18)｜御旗盾無-預備｜相殺-預備｜空蟬 速度增加了3.20(161.76)"],
+   ["o",QH,"三河武士：[立花誾千代]統率增加了16(222.42)、[立花道雪]統率增加了16(266.30)、[北條氏康]統率增加了16(388.31)｜一領具足：我軍全體「兵力傷亡」降低了14.09%"],
+   ["o",QI,"疾風迅雷-預備"]],
+};
+const PREP_T={
+ date:{
+  "士氣影響":[["t","[伊達政宗]隊","士氣100.00，造成傷害100%（推估）"]],
+  "兵種影響":[["t","[伊達政宗]隊","鐵炮 Lv10　屬性調整為120.00%（推估）"],["t","兵種相剋","鐵炮剋足輕：伊達隊造成傷害 ×1.22，立花隊造成傷害 ×0.96（暫定）"]],
+  "設施影響":[["t","[伊達政宗]隊","隊屬性提升7.0%（推估）"]],
+  "兵學影響":[["t","[伊達政宗]","反討之計｜亂戰II｜逆境II｜恩顧I（未納入計算）"],["t","[真田昌幸]","虛實自在｜膽力II｜活路II｜妙策I（未納入計算）"],["t","[三好實休]","鼓舞奮迅｜仁愛II｜天時II｜不惑I（未納入計算）"]],
+  "戰法影響":[["t","[伊達政宗]","伊達風采：獲得5層風采｜獨眼龍：大將時造成傷害提高15%｜善戰II 會心 2.9%"],
+   ["t","[伊達政宗]","龍騎兵：鐵炮進階為龍騎兵，每回合開始時裝填彈丸"],["t","[真田昌幸]","表裡比興・誘敵深入・戰意崩壞 已裝配｜智慧I 智略提高2%"],
+   ["t","[三好實休]","風流武者-預備｜物外軒：前4回合主動、突擊戰法發動率提升4.5%｜固守II 我軍全體受到兵刃傷害減少1.8%｜智慧I 智略提高2%"]]},
+ toku:{
+  "士氣影響":[["t","[德川家康]隊","士氣100.00，造成傷害100%（推估）"]],
+  "兵種影響":[["t","[德川家康]隊","足輕 Lv10　屬性調整為120.00%（推估）"],["t","兵種相剋","同為足輕，無相剋"]],
+  "軍學影響":[["t","[德川家康]隊","獲得【軍學訓練-足輕】增益效果，【統率】屬性提升了5、受到的傷害降低了2.50%（推估）"]],
+  "設施影響":[["t","[德川家康]隊","隊屬性提升7.0%（推估）"]],
+  "兵學影響":[["t","[德川家康]","救援心得｜機動II｜不惑II｜協同I（未納入計算）"],["t","[本多忠勝]","勇猛果敢｜俊才II 受到兵刃傷害降低2.00%｜才氣II 受到謀略傷害降低3.60%｜恩顧I"],["t","[本多正信]","生生不息｜俊才II 受到兵刃傷害降低2.00%｜才氣II 受到謀略傷害降低3.60%｜恩顧I"]],
+  "戰法影響":[["t","[德川家康]","三河魂-預備｜戮力同心-預備｜牢固II 受到傷害減少1.6%"],
+   ["t","[本多忠勝]","古今獨步-預備｜堅忍不拔：獲得反擊狀態（傷害率92%）｜剛猛II 受到普通攻擊的機率提高"],
+   ["t","[本多正信]","非常之器：我軍全體獲得35%規避（前2回合）｜猛攻I 我軍全體造成兵刃傷害增加1.4%｜看破III 受到謀略傷害減少4%｜智慧III 智略提高3%"]]},
+};
+const PREP_ORDER=["士氣影響","兵種影響","軍學影響","評定眾影響","設施影響","裝備影響","兵學影響","戰法影響"];
+function prepHtml(dyn){
+  const T=PREP_T[OPPK];
+  return PREP_ORDER.map(k=>{const rows=(PREP_O[k]||[]).concat(T[k]||[]);
+    if(k==="戰法影響"&&dyn.length)rows.push(...dyn.map(x=>["t","[本多正信]",x]));
+    if(!rows.length)return"";
+    return `<div class="pblk"><div class="ph2">◈ ${k}</div>${rows.map(([sd,who,txt])=>`<div class="prow ${sd}"><span class="pwho">${who}</span><span class="ptxt">${txt}</span></div>`).join("")}</div>`}).join("");
+}
+
+// ---------- 畫面 ----------
+const fmt=n=>Math.round(n).toLocaleString();
+function card(u){
+  const kill=Object.values(u.st).reduce((s,x)=>s+x.k,0), heal=Object.values(u.st).reduce((s,x)=>s+x.h,0);
+  const ph=u.n.replace(/^立花/,"");
+  return `<article class="card${u.T<=0?" isdead":""}">
+    <div class="hd"><div class="row1">${u.boss?'<span class="badge">大將</span>':'<span class="badge sub">副將</span>'}<span>${fmt(u.T)} / ${fmt(T0)}</span></div>
+      <div class="mini"><i style="width:${u.T/T0*100}%"></i></div>
+      <div class="name">${u.n} <small style="font-family:var(--sans);font-weight:500;font-size:10px;color:var(--muted)">Lv50</small></div></div>
+    <div class="pic"><div class="ph">${ph}</div><img src="${u.img}" alt="${u.n}" onerror="this.remove()"><span class="unit">${u.unit}</span><div class="dead">陣亡</div></div>
+    <div class="sum">殺敵 ${fmt(kill)}　救援 ${fmt(heal)}</div>
+    <div class="tacs">${u.tacs.map(([t,c])=>{const s=u.st[t];const cls={atk2:"act",cmd:"cmd",act:"act",pas:"pas",unit:"unit",atk:"atk"}[c];
+      return `<div class="tac ${cls}"><span class="tn">${t}</span><span class="k1">發動 ${s.f}</span><span class="k2">殺敵 ${fmt(s.k)}</span><span class="k3">救援 ${fmt(s.h)}</span></div>`}).join("")}</div>
+  </article>`;
+}
+function show(b){
+  // 跟遊戲一樣：大將放在最外側（左邊第一張、右邊最後一張）
+  const os=b.U.filter(u=>u.side==="o").sort((a,c)=>(c.boss||0)-(a.boss||0));
+  const ts=b.U.filter(u=>u.side==="t").sort((a,c)=>(a.boss||0)-(c.boss||0));
+  document.getElementById("cards-o").innerHTML=os.map(card).join("");
+  document.getElementById("cards-t").innerHTML=ts.map(card).join("");
+  const [o,t]=b.curve[b.curve.length-1];
+  document.getElementById("ot").textContent=`${fmt(o)} / ${fmt(T0*3)}`;
+  document.getElementById("tt").textContent=`${fmt(t)} / ${fmt(T0*3)}`;
+  document.getElementById("obar").style.width=(o/T0/3*100)+"%";
+  document.getElementById("tbar").style.width=(t/T0/3*100)+"%";
+  const v=document.getElementById("verdict");
+  v.firstChild.nodeValue=b.result; v.style.color=b.result==="勝利"?"var(--win)":b.result==="失敗"?"var(--lose)":"var(--ink)";
+  document.getElementById("vsub").textContent=`第 ${b.curve.length-1} 回合結束`;
+  // 依回合拆開，回合內依「武將區塊 → 段落 → 文字」組成遊戲戰報的樣子
+  const rounds=[{blocks:[]}]; let blk=null, sec=null, endText="";
+  const newBlk=(h)=>{blk={h,secs:[]};rounds[rounds.length-1].blocks.push(blk);sec=null};
+  newBlk(null);
+  for(const x of b.log){
+    if(typeof x==="string"){if(!sec){sec={label:"",lines:[]};blk.secs.push(sec)}sec.lines.push(x);continue}
+    if(x.t==="round"){rounds.push({r:x.r,blocks:[]});newBlk(null)}
+    else if(x.t==="order"){rounds[rounds.length-1].order=x.list}
+    else if(x.t==="actor")newBlk(x);
+    else if(x.t==="sec"){sec={label:x.label,lines:[]};blk.secs.push(sec)}
+    else if(x.t==="end")endText=x.text;
+  }
+  const names=["準備階段","回合一","回合二","回合三","回合四","回合五","回合六","回合七","回合八"];
+  const pc=l=>l==="行動前"||l==="回合開始"||l==="戰法影響"?"pre":l.startsWith("A ")?"a":"s";
+  const secHtml=sc=>`<div class="sec"><span class="pill ${pc(sc.label)}">${sc.label||"—"}</span><div class="lines">${sc.lines.map(t=>`<div>${t}</div>`).join("")}</div></div>`;
+  const blkHtml=bk=>{const secs=bk.secs.filter(sc=>sc.lines.length);if(!bk.h&&!secs.length)return"";
+    if(!bk.h)return `<div class="blk">${secs.map(secHtml).join("")}</div>`;
+    const h=bk.h;
+    return `<div class="blk ${h.side}"><div class="bh"><span class="av">${h.n.slice(-2,-1)}</span><span class="bn">[${h.n}]<small>${h.unit}</small>${h.conf?"<em>混亂</em>":""}${h.para?"<em>麻痺</em>":""}</span>
+      <span class="stat"><b>${h.T.toLocaleString()}</b>兵力</span><span class="stat k"><b>${h.kill.toLocaleString()}</b>殺敵數</span><span class="stat h"><b>${h.heal.toLocaleString()}</b>救援</span></div>
+      <div class="bs"><span><span class="${h.side}">[${h.n}]</span> 開始行動</span><span class="sp">速度 ${h.spd.toFixed(2)}</span></div>${secs.map(secHtml).join("")}</div>`};
+  const tabs=document.getElementById("rtabs"), lg=document.getElementById("log");
+  const dyn=rounds[0].blocks.flatMap(bk=>bk.secs.flatMap(sc=>sc.lines));
+  const pick=i=>{tabs.querySelectorAll("button").forEach((t,j)=>t.setAttribute("aria-pressed",i===j));const R=rounds[i];
+    if(i===0){lg.innerHTML=prepHtml(dyn);lg.scrollTop=0;return}
+    lg.innerHTML=(i?`<div class="rban">${names[i]}</div>`:"")+(R.order?`<div class="order">${R.order.map((o,k)=>`<span class="${o.side}"><i>${k+1}</i>${o.n}</span>`).join("")}</div>`:"")
+      +(R.blocks.map(blkHtml).join("")||"<div>（無事件）</div>")+(i===rounds.length-1&&endText?`<div class="endl">${endText}</div>`:"");lg.scrollTop=0};
+  tabs.innerHTML=rounds.map((_,i)=>`<button id="rt-${i}">${names[i]}</button>`).join("");
+  tabs.querySelectorAll("button").forEach((t,i)=>t.onclick=()=>pick(i)); pick(1);
+  fit();
+}
+// 等比縮放舞台：寬度一定塞得下；橫置（寬大於高）時連高度也塞進螢幕
+function fit(){
+  const st=document.getElementById("stage"), ho=document.getElementById("holder");
+  const W=1000, Hs=st.offsetHeight;
+  const cs=getComputedStyle(document.querySelector(".outer"));
+  const aw=document.documentElement.clientWidth-parseFloat(cs.paddingLeft)-parseFloat(cs.paddingRight);
+  const ah=window.innerHeight-16;
+  let s=Math.min(1.35,aw/W);
+  if(window.innerWidth>window.innerHeight)s=Math.min(s,ah/Hs);
+  st.style.transform=`scale(${s})`;
+  ho.style.width=(W*s)+"px"; ho.style.height=(Hs*s)+"px";
+}
+window.addEventListener("resize",fit);
+window.addEventListener("orientationchange",()=>setTimeout(fit,200));
+if(document.fonts)document.fonts.ready.then(fit);
+function setOpp(k){OPPK=k;const O=OPP[k];
+  document.querySelectorAll(".btn.opp").forEach(b=>b.setAttribute("aria-pressed",b.dataset.k===k));
+  document.getElementById("tname").textContent=O.label+"・防守";document.getElementById("tlabel").textContent=O.label;
+  document.getElementById("tsub").textContent=`士氣 ${O.morale}・${O.unit} Lv10・${O.note}`;
+  document.getElementById("multi").hidden=true; show(battle(true));}
+document.querySelectorAll(".btn.opp").forEach(b=>b.onclick=()=>setOpp(b.dataset.k));
+// ---------- 隊伍評分 ----------
+const TEAMS={o:{label:"立花隊",units:OURS},date:{label:"伊達隊",units:OPP.date.units},toku:{label:"德川隊",units:OPP.toku.units}};
+let RATE=null, RSEL="o";
+function runMatch(k,n){const keep=OPPK;OPPK=k;const rows=[];
+  for(let i=0;i<n;i++){const b=battle(false),e=b.curve[b.curve.length-1];rows.push({M:b.M,oL:T0*3-e[0],tL:T0*3-e[1],oT:e[0],tT:e[1],res:b.result,CT:b.CT,rounds:b.curve.length-1,U:b.U.map(u=>({n:u.n,side:u.side,dmgR:u.dmgR,healR:u.healR,healTheo:u.healTheo,TR:u.TR,ctlBy:u.ctlBy,st:u.st,T:u.T}))})}
+  OPPK=keep;return rows}
+function agg(list){ // list: [{m(己方M), myLoss, foeLoss, myT}]
+  const n=list.length, avg=f=>list.reduce((a,x)=>a+f(x),0)/n;
+  const dmg=avg(x=>x.m.dmg), mean=avg(x=>x.myT), sd=Math.sqrt(avg(x=>(x.myT-mean)**2));
+  const ratio=avg(x=>x.foeLoss)/Math.max(1,avg(x=>x.myLoss));
+  const sc=v=>Math.round(Math.max(0,Math.min(100,v)));
+  return [
+   ["輸出",sc(100*(1-Math.exp(-dmg/30000)))],
+   ["爆發",sc(100*(1-Math.exp(-avg(x=>x.m.burst)/9000)))],
+   ["多穿",sc(100*Math.min(1,(avg(x=>x.m.multi)/Math.max(1,dmg))/0.7))],
+   ["回復",sc(100*(1-Math.exp(-avg(x=>x.m.heal)/12000)))],
+   ["控制",sc(100*(1-Math.exp(-avg(x=>x.m.ctl)/8)))],
+   ["破壞力",sc(100*(1-Math.exp(-avg(x=>x.m.maxhit)/1500)))],
+   ["穩定性",sc(100*(1-Math.min(1,sd/Math.max(1,mean))))],
+   ["兵力戰功比",sc(100*ratio/(ratio+1))]];
+}
+function computeRate(n){
+  const md=runMatch("date",n), mt=runMatch("toku",n);
+  const side=(rows,s)=>rows.map(r=>s==="o"?{m:r.M.o,myLoss:r.oL,foeLoss:r.tL,myT:r.oT}:{m:r.M.t,myLoss:r.tL,foeLoss:r.oL,myT:r.tT});
+  const xr=list=>list.reduce((a,x)=>a+x.foeLoss,0)/Math.max(1,list.reduce((a,x)=>a+x.myLoss,0));
+  const o=side(md,"o").concat(side(mt,"o")), d=side(md,"t"), t=side(mt,"t");
+  return {n:n*2,raw:{date:md,toku:mt},
+    o:{bars:agg(o),vs:[["伊達隊",xr(side(md,"o"))],["德川隊",xr(side(mt,"o"))]]},
+    date:{bars:agg(d),vs:[["立花隊",xr(d)]]},
+    toku:{bars:agg(t),vs:[["立花隊",xr(t)]]}};
+}
+function drawRate(){
+  const R=RATE[RSEL], T=TEAMS[RSEL], sd=RSEL==="o"?"o":"t";
+  document.querySelectorAll(".rteam button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.s===RSEL));
+  const order=T.units.slice().sort((a,c)=>(c.boss||0)-(a.boss||0));
+  document.getElementById("rcards").innerHTML=order.map(u=>`<div class="rc ${sd}"><div class="nm">${u.n}${u.boss?' <small style="font-size:11px;color:var(--gold)">大將</small>':''}</div>
+    <div class="tl">${u.tacs.filter(t=>t[0]!=="普通攻擊").map(t=>`<span>${t[0]}</span>`).join("")}</div>
+    <div class="at">武勇 ${Math.round(u.wu)}・智略 ${Math.round(u.zhi)}・統率 ${Math.round(u.tong)}・速度 ${Math.round(u.spd)}</div></div>`).join("");
+  const total=R.bars.reduce((a,b)=>a+b[1],0)/R.bars.length/10;
+  const tier=total>=7.5?"T0":total>=6.5?"T1":total>=5.5?"T2":total>=4.5?"T3":"T4";
+  document.getElementById("rtier").textContent=tier; document.getElementById("rscore").textContent=`(${total.toFixed(2)})`;
+  document.getElementById("rn").textContent=RATE.n.toLocaleString();
+  document.getElementById("rbars").innerHTML=R.bars.map(([k,v])=>`<div class="brow ${v>=75?"hi":v>=60?"mid":""}"><span class="lab">${k}</span><span class="tr"><i style="width:${v}%"></i></span><span class="v">${v}</span></div>`).join("");
+  const good=R.vs.filter(x=>x[1]>=1).sort((a,b)=>b[1]-a[1]), bad=R.vs.filter(x=>x[1]<1).sort((a,b)=>a[1]-b[1]);
+  const row=x=>`<tr><td>${x[0]}</td><td>${x[1].toFixed(1)}</td></tr>`, none='<tr><td colspan="2" style="color:var(--muted)">目前沒有</td></tr>';
+  document.getElementById("rgood").innerHTML=good.map(row).join("")||none;
+  document.getElementById("rbad").innerHTML=bad.map(row).join("")||none;
+}
+function openRate(fresh){RSEL=OPPK==="o"?"o":RSEL;if(!RATE||fresh)RATE=computeRate(300);drawRate();document.getElementById("rate").hidden=false}
+document.getElementById("b-rate").onclick=()=>{RSEL="o";openRate(false)};
+document.getElementById("b-rerate").onclick=()=>{openRate(true);if(!document.getElementById("rep").hidden)drawReport()};
+const PAL=["#3d7cc9","#e8711c","#3aa17e"], PIE=["#7aa9d6","#e48c45","#5bb894","#e4c35a","#d97cc9","#6f9fd8","#e2475c","#9b8ad6","#8cc2a5","#d2a06b"];
+let CHARTS=[];
+function drawReport(){
+  if(typeof Chart==="undefined"){document.getElementById("rep").innerHTML='<p class="rdef">圖表元件載入失敗，請重新整理頁面。</p>';return}
+  CHARTS.forEach(c=>c.destroy());CHARTS=[];
+  const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+  Chart.defaults.color=css("--muted");Chart.defaults.borderColor=css("--line");Chart.defaults.font.family=css("--sans");
+  const sel=RSEL, side=sel==="o"?"o":"t", T=TEAMS[sel];
+  const list=sel==="o"?RATE.raw.date.concat(RATE.raw.toku):RATE.raw[sel];
+  const n=list.length, A=f=>list.reduce((a,r)=>a+f(r),0)/n;
+  const names=T.units.slice().sort((a,c)=>(c.boss||0)-(a.boss||0)).map(u=>u.n);
+  const U=(r,nm)=>r.U.find(x=>x.n===nm);
+  const sum=a=>a.reduce((x,y)=>x+y,0);
+  const tot=r=>sum(names.map(nm=>sum(U(r,nm).dmgR)));
+  const burst=A(r=>sum(names.map(nm=>U(r,nm).dmgR[1]+U(r,nm).dmgR[2])));
+  const topHero=A(r=>Math.max(...names.map(nm=>sum(U(r,nm).dmgR))));
+  const all=A(tot), rounds=A(r=>r.rounds);
+  const dmgCurve=names.map(nm=>[1,2,3,4,5,6,7,8].map(i=>A(r=>U(r,nm).dmgR[i])));
+  const dmgShare=names.map(nm=>A(r=>sum(U(r,nm).dmgR)));
+  const tac={};list.forEach(r=>names.forEach(nm=>{const st=U(r,nm).st;for(const k in st){if(!st[k].k)continue;const key=k==="普通攻擊"?nm.replace(/^(立花|北條|伊達|真田|三好|德川|本多)/,"")+"普攻":k;tac[key]=(tac[key]||0)+st[k].k/n}}));
+  const tacArr=Object.entries(tac).sort((a,b)=>b[1]-a[1]);const tacTop=tacArr.slice(0,7);const rest=sum(tacArr.slice(7).map(x=>x[1]));if(rest>0)tacTop.push(["其他",rest]);
+  const ctl={};list.forEach(r=>{for(const k in r.CT[side])ctl[k]=(ctl[k]||0)+r.CT[side][k]/n});
+  const ctlTotal=sum(Object.values(ctl)), ctlBy=names.map(nm=>A(r=>U(r,nm).ctlBy));
+  const healReal=A(r=>sum(names.map(nm=>sum(U(r,nm).healR)))), healTheo=A(r=>sum(names.map(nm=>U(r,nm).healTheo)));
+  const healCurve=names.map(nm=>[1,2,3,4,5,6,7,8].map(i=>A(r=>U(r,nm).healR[i])));
+  const foeLoss=all, myLoss=A(r=>sum(r.U.filter(x=>x.side!==side).map(x=>sum(x.dmgR))));
+  const dead=names.map(nm=>list.filter(r=>U(r,nm).T<=0).length/n), left=names.map(nm=>A(r=>U(r,nm).T));
+  const hp=names.map(nm=>[0,1,2,3,4,5,6,7,8].map(i=>A(r=>U(r,nm).TR[i])));
+  let w=0,dw=0,dl=0,l=0;list.forEach(r=>{const my=side==="o"?r.oT:r.tT,fo=side==="o"?r.tT:r.oT,res=side==="o"?r.res:({勝利:"失敗",失敗:"勝利",平手:"平手"})[r.res];
+    if(res==="勝利")w++;else if(res==="失敗")l++;else if(my>=fo)dw++;else dl++});
+  const pc=x=>Math.round(x/n*100)+"%", f0=x=>Math.round(x).toLocaleString();
+  const vs=RATE[sel].vs.slice().sort((a,b)=>b[1]-a[1]);
+  document.getElementById("rep").innerHTML=`
+  <div class="rp"><h5>綜合雷達</h5><div class="ch"><canvas id="c-radar" aria-label="八項指標雷達圖"></canvas></div></div>
+  <div class="rp"><h4>輸出／爆發分析</h4>
+    <div class="kv"><span>爆發傷害：<b class="c1">${f0(burst)}</b></span><span>最高武將傷害：<b class="c2">${f0(topHero)}</b></span><span>八回合傷害：<b class="c3">${f0(all)}</b></span><span>平均結束回合數：<b class="c4">${rounds.toFixed(1)}</b></span></div>
+    <h5>傷害曲線</h5><div class="ch"><canvas id="c-dmg"></canvas></div>
+    <div class="two"><div><h5>傷害占比</h5><div class="ch sm"><canvas id="c-dshare"></canvas></div></div><div><h5>戰法傷害占比</h5><div class="ch sm"><canvas id="c-tshare"></canvas></div></div></div></div>
+  <div class="rp"><h4>控制分析</h4><div class="big">控制回合數：${ctlTotal.toFixed(1)}</div>
+    <div class="two"><div><h5>回合數</h5><div class="ch sm"><canvas id="c-ctl"></canvas></div></div><div><h5>武將控制能力</h5><div class="ch sm"><canvas id="c-ctlu"></canvas></div></div></div></div>
+  <div class="rp"><h4>回復分析</h4>
+    <div class="kv"><span>理論治療量：<b class="c1">${f0(healTheo)}</b></span><span>實際治療量：<b class="c2">${f0(healReal)}</b></span><span>治療有效率：<b class="c3">${healTheo?(healReal/healTheo).toFixed(2):"—"}</b></span></div>
+    <h5>治療曲線</h5><div class="ch"><canvas id="c-heal"></canvas></div></div>
+  <div class="rp"><h4>多穿分析</h4>
+    <div class="kv"><span>平均殺敵（不扣治療）：<b class="c1">${f0(foeLoss)}</b></span><span>平均承受傷害：<b class="c2">${f0(myLoss)}</b></span><span>戰功損失比：<b class="c3">${(foeLoss/Math.max(1,myLoss)).toFixed(1)}</b></span></div>
+    <div><b>陣亡機率：</b><div class="dline d">${names.map((nm,i)=>`<span>${nm}－${pc(dead[i]*n)}陣亡</span>`).join("")}</div></div>
+    <div><b>剩餘兵力：</b><div class="dline r">${names.map((nm,i)=>`<span>${nm}－${f0(left[i])}</span>`).join("")}</div></div>
+    <h5>武將血線</h5><div class="ch"><canvas id="c-hp"></canvas></div></div>
+  <div class="rp"><h4>結果分析</h4>
+    <div class="kv" style="display:block"><div class="resl"><span>勝利：<b style="color:#2f6fd0">${pc(w)}</b></span><span>優平：<b style="color:#2bb3a6">${pc(dw)}</b></span><span>劣平：<b style="color:#e0a321">${pc(dl)}</b></span><span>失敗：<b style="color:#e2552d">${pc(l)}</b></span></div>
+    <div class="resb"><i style="width:${w/n*100}%;background:#2f6fd0"></i><i style="width:${dw/n*100}%;background:#2bb3a6"></i><i style="width:${dl/n*100}%;background:#e0a321"></i><i style="width:${l/n*100}%;background:#e2552d"></i></div>
+    <p class="rdef" style="margin:6px 0 0">優平／劣平＝8 回合打完、雙方大將都沒倒時，我方剩餘兵力較多／較少。</p></div></div>
+  <div class="rp"><h4>克制分析</h4><h5 style="text-align:left;color:#2f6fd0">｜隊伍／兵力交換比</h5>
+    <div class="xg">${vs.map(x=>`<div class="${x[1]>=1?"g":"bd"}"><span>${x[0]}</span><b>${x[1].toFixed(1)}</b></div>`).join("")}</div></div>`;
+  document.getElementById("rep").hidden=false;
+  const ln=(id,series,labels)=>CHARTS.push(new Chart(document.getElementById(id),{type:"line",data:{labels,datasets:series.map((d,i)=>({label:names[i],data:d,borderColor:PAL[i],backgroundColor:PAL[i]+"33",fill:true,tension:.3,pointRadius:2,borderWidth:2.5}))},
+    options:{maintainAspectRatio:false,animation:false,plugins:{legend:{position:"bottom"}},scales:{y:{beginAtZero:true,ticks:{callback:v=>v.toLocaleString()}}}}}));
+  const pie=(id,labels,data,cols)=>CHARTS.push(new Chart(document.getElementById(id),{type:"pie",data:{labels,datasets:[{data,backgroundColor:cols,borderColor:css("--paper"),borderWidth:2}]},
+    options:{maintainAspectRatio:false,animation:false,plugins:{legend:{position:"bottom",labels:{boxWidth:10,font:{size:11}}},tooltip:{callbacks:{label:c=>`${c.label}：${Math.round(c.raw/sum(c.dataset.data)*100)}%`}}}}}));
+  const R=RATE[sel].bars;
+  CHARTS.push(new Chart(document.getElementById("c-radar"),{type:"radar",data:{labels:R.map(x=>x[0]),datasets:[{data:R.map(x=>x[1]),borderColor:"#3d7cc9",backgroundColor:"#3d7cc955",pointRadius:3,borderWidth:2.5}]},
+    options:{maintainAspectRatio:false,animation:false,plugins:{legend:{display:false}},scales:{r:{min:0,max:100,ticks:{display:false,stepSize:20},pointLabels:{font:{size:13}}}}}}));
+  ln("c-dmg",dmgCurve,["1","2","3","4","5","6","7","8"]);
+  pie("c-dshare",names,dmgShare,PAL);
+  pie("c-tshare",tacTop.map(x=>x[0]),tacTop.map(x=>x[1]),PIE);
+  const ck=Object.entries(ctl).sort((a,b)=>b[1]-a[1]);
+  CHARTS.push(new Chart(document.getElementById("c-ctl"),{type:"bar",data:{labels:ck.length?ck.map(x=>x[0]):["無"],datasets:[{data:ck.length?ck.map(x=>+x[1].toFixed(1)):[0],backgroundColor:"#2f86d0"}]},
+    options:{indexAxis:"y",maintainAspectRatio:false,animation:false,plugins:{legend:{display:false}},scales:{x:{beginAtZero:true}}}}));
+  pie("c-ctlu",names,ctlBy.map(x=>x||0.0001),PAL);
+  ln("c-heal",healCurve,["1","2","3","4","5","6","7","8"]);
+  ln("c-hp",hp,["開戰","1","2","3","4","5","6","7","8"]);
+}
+document.getElementById("b-rep").onclick=()=>{const r=document.getElementById("rep");if(!r.hidden){r.hidden=true;return}drawReport();r.scrollIntoView({behavior:"smooth"})};
+document.getElementById("b-rclose").onclick=()=>{document.getElementById("rate").hidden=true};
+document.getElementById("rate").addEventListener("click",e=>{if(e.target.id==="rate")e.target.hidden=true});
+document.addEventListener("keydown",e=>{if(e.key==="Escape")document.getElementById("rate").hidden=true});
+document.querySelectorAll(".rteam button").forEach(b=>b.onclick=()=>{RSEL=b.dataset.s;drawRate();if(!document.getElementById("rep").hidden)drawReport()});
+document.getElementById("b-one").onclick=()=>show(battle(true));
+document.getElementById("b-log").onclick=()=>{const p=document.getElementById("logp");p.hidden=false;p.scrollIntoView({behavior:"smooth"})};
+document.getElementById("b-many").onclick=()=>{
+  const n=1000,c={"勝利":0,"平手":0,"失敗":0};let ro=0,rt=0,adv=0;
+  for(let i=0;i<n;i++){const b=battle(false);c[b.result]++;const e=b.curve[b.curve.length-1];ro+=e[0];rt+=e[1];if(b.result==="平手"&&e[0]>e[1])adv++}
+  const p=x=>(x/n*100).toFixed(1)+"%";
+  document.getElementById("mbar").innerHTML=[["勝利","var(--win)"],["平手","var(--muted)"],["失敗","var(--them)"]].map(([k,col])=>`<div style="width:${c[k]/n*100}%;background:${col}">${c[k]/n>=.08?k+" "+p(c[k]):""}</div>`).join("");
+  document.getElementById("mnote").textContent=`勝利 ${p(c["勝利"])}・平手 ${p(c["平手"])}（其中立花隊兵力較多 ${p(adv)}）・失敗 ${p(c["失敗"])}｜平均剩餘兵力：立花隊 ${fmt(ro/n)}、${OPP[OPPK].label} ${fmt(rt/n)}`;
+  const m=document.getElementById("multi"); m.hidden=false; m.scrollIntoView({behavior:"smooth"});
+};
+setOpp("date");
+</script>

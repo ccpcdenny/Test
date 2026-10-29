@@ -41,6 +41,14 @@ body{background:var(--bg);color:var(--ink);font-family:var(--sans)}
 .badge{font-size:10px;font-weight:700;padding:0 5px;border-radius:3px;background:var(--gold);color:var(--paper)}
 .badge.sub{background:var(--muted)}
 .name{font-family:var(--serif);font-weight:900;font-size:15px;letter-spacing:.04em;text-align:center;line-height:1.2}
+.reds{display:flex;align-items:center;justify-content:center;gap:3px}
+.reds .rd{width:12px;height:12px;border-radius:50%;border:1.5px solid #c9443a;background:var(--paper);padding:0;cursor:pointer}
+.reds .rd.on{background:#d8463a}
+.reds .rd:focus-visible{outline:2px solid var(--gold);outline-offset:1px}
+.reds .rl{font-size:10px;color:var(--muted);margin-left:4px;min-width:2.6em}
+.trs{display:flex;flex-wrap:wrap;gap:2px;justify-content:center;align-content:flex-start;min-height:32px}
+.trs span{font-size:9.5px;padding:0 4px;border-radius:3px;background:var(--paper2);border:1px solid var(--line);color:var(--ink)}
+.trs span.off{opacity:.35;text-decoration:line-through}
 .mini{height:4px;border-radius:2px;background:var(--bar-bg);overflow:hidden}
 .mini i{display:block;height:100%}
 .o .mini i{background:var(--ours)} .t .mini i{background:var(--them)}
@@ -180,7 +188,7 @@ body{background:var(--bg);color:var(--ink);font-family:var(--sans)}
         <div class="side t"><div class="lab"><span id="tt"></span><b id="tname">伊達隊・防守</b></div><div class="tbar"><i id="tbar"></i></div></div>
       </section>
       <section class="field">
-        <div class="army o"><h2>立花隊 <span>士氣 130・足輕 Lv10</span></h2><div class="cards" id="cards-o"></div></div>
+        <div class="army o"><h2>立花隊 <span id="osub">士氣 130・足輕 Lv10</span></h2><div class="cards" id="cards-o"></div></div>
         <div class="div" aria-hidden="true"></div>
         <div class="army t"><h2><span id="tsub">士氣 100・鐵炮 Lv10・屬性為推估</span> <b id="tlabel">伊達隊</b></h2><div class="cards" id="cards-t"></div></div>
       </section>
@@ -221,7 +229,7 @@ body{background:var(--bg);color:var(--ink);font-family:var(--sans)}
       <div class="rtabs" id="rtabs" role="group" aria-label="選擇回合"></div>
       <div class="log" id="log"></div>
     </section>
-    <p class="warn">NOBUDB 模擬對戰測試版｜粗估：兵刃公式誤差約 8%，謀略公式尚未量測（暫用兵刃公式），對手屬性（Lv50＋加點 100、兵種 Lv10、協力 7%）與兵學為推估。</p>
+    <p class="warn">NOBUDB 模擬對戰測試版｜粗估：兵刃公式誤差約 8%，謀略公式尚未量測（暫用兵刃公式），對手屬性（Lv50 成長值＋加點 50＋紅度×10、協力 7%）與兵學為推估；點武將卡上的紅點可調整紅度。</p>
   </div>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
@@ -232,30 +240,65 @@ const H=1466/(2.6*Math.pow(9200,Q)*TS*(328.91+AO));
 const base=(T,A,D)=>C*Math.pow(Math.max(T,0),Q)*TS*(A+AO)*Math.exp(-D/S);
 const healAmt=(T,I,r)=>H*Math.pow(Math.max(T,0),Q)*TS*(I+AO)*r;
 const K=1.27;
-const OURS=[
- {n:"立花道雪",side:"o",unit:"足輕",wu:408.94,zhi:191.6,tong:266.30,spd:162.19,rb:.9555,rm:.9099,crit:.05,img:"img/tachibana-dosetsu.webp",
+// ---------- 武將與紅度 ----------
+// 我方 p＝面板（含 100 點加點、裝備面板值），取自實際戰報；對手 p＝Lv50 成長值，加點 50＋紅度×10 依 al 分配（推估）
+const UDEF={
+ "立花道雪":{side:"o",unit:"足輕",p:{wu:307.48,zhi:148.27,tong:189.79,spd:125.49},al:{wu:1},ex:.0925,flat:{wu:1.6,tong:21},rb:.9555,rm:.9399,img:"img/tachibana-dosetsu.webp",
   tacs:[["電光雷轟","atk2"],["霹靂一擊","act"],["所向披靡","act"],["普通攻擊","atk"]]},
- {n:"立花誾千代",side:"o",unit:"足輕",boss:1,wu:420.18,zhi:179.5,tong:222.42,spd:161.76,rb:.9555,rm:.9099,crit:0,img:"img/tachibana-ginchiyo.webp",
+ "立花誾千代":{side:"o",unit:"足輕",boss:1,p:{wu:314.66,zhi:138.82,tong:155.8,spd:122.68},al:{wu:1},ex:.0925,flat:{wu:2,zhi:2,tong:21,spd:3.2},rb:.9555,rm:.9399,img:"img/tachibana-ginchiyo.webp",
   tacs:[["疾風迅雷","cmd"],["御旗盾無","pas"],["五里霧中","act"],["普通攻擊","atk"]]},
- {n:"北條氏康",side:"o",unit:"足輕",wu:173.96,zhi:241.27,tong:388.31,spd:159.83,rb:.9555,rm:.9099,crit:0,img:"img/hojo-ujiyasu.webp",
+ "北條氏康":{side:"o",unit:"足輕",p:{wu:136.98,zhi:189.98,tong:287.41,spd:125.85},al:{tong:1},ex:.07,flat:{tong:23.3},rb:.9555,rm:.9399,img:"img/hojo-ujiyasu.webp",
   tacs:[["相模之獅","act"],["一領具足","cmd"],["三河武士","unit"],["普通攻擊","atk"]]},
-];
-const OPP={
- date:{label:"伊達隊",unit:"鐵炮",mo:DIS,mt:ADV,morale:100,note:"鐵炮剋足輕：對方傷害 ×1.22、我方 ×0.96",units:[
- {n:"伊達政宗",side:"t",unit:"鐵炮",boss:1,wu:234*K,zhi:235*K,tong:188*K,spd:117*K,rb:.982,rm:1,crit:.029,dealt:.15,img:"img/date-masamune.webp",
+ "伊達政宗":{side:"t",unit:"鐵炮",boss:1,p:{wu:184,zhi:185,tong:188,spd:117},al:{wu:.5,zhi:.5},pts:1,ex:.07,flat:{},rb:1,rm:1,img:"img/date-masamune.webp",
   tacs:[["伊達風采","cmd"],["攻其不備","act"],["龍騎兵","unit"],["普通攻擊","atk"]]},
- {n:"真田昌幸",side:"t",unit:"鐵炮",wu:105*K,zhi:331*K*1.02,tong:176*K,spd:76*K,rb:.982,rm:1,crit:0,img:"img/sanada-masayuki.webp",
+ "真田昌幸":{side:"t",unit:"鐵炮",p:{wu:105,zhi:231,tong:176,spd:76},al:{zhi:1},pts:1,ex:.07,flat:{},rb:1,rm:1,img:"img/sanada-masayuki.webp",
   tacs:[["表裡比興","act"],["誘敵深入","act"],["戰意崩壞","atk2"],["普通攻擊","atk"]]},
- {n:"三好實休",side:"t",unit:"鐵炮",wu:116*K,zhi:287*K*1.02,tong:163*K,spd:75*K,rb:.982,rm:1,crit:0,img:"img/miyoshi-jikkyu.webp",
-  tacs:[["風流武者","pas"],["回天轉運","act"],["瞬息萬變","act"],["普通攻擊","atk"]]}]},
- toku:{label:"德川隊",unit:"足輕",mo:1,mt:1,morale:100,note:"同為足輕，無兵種相剋",units:[
- {n:"德川家康",side:"t",unit:"足輕",boss:1,wu:155*K,zhi:169*K,tong:331*K+5,spd:61*K,rb:.975*.984,rm:.975*.984,crit:0,dealt:.014,img:"img/tokugawa-ieyasu.webp",
+ "三好實休":{side:"t",unit:"鐵炮",p:{wu:116,zhi:187,tong:163,spd:75},al:{zhi:1},pts:1,ex:.07,flat:{},rb:1,rm:1,img:"img/miyoshi-jikkyu.webp",
+  tacs:[["風流武者","pas"],["回天轉運","act"],["瞬息萬變","act"],["普通攻擊","atk"]]},
+ "德川家康":{side:"t",unit:"足輕",boss:1,p:{wu:155,zhi:169,tong:231,spd:61},al:{tong:1},pts:1,ex:.07,flat:{tong:5},rb:.975,rm:.975,img:"img/tokugawa-ieyasu.webp",
   tacs:[["三河魂","cmd"],["戮力同心","cmd"],["以逸待勞","act"],["普通攻擊","atk"]]},
- {n:"本多忠勝",side:"t",unit:"足輕",wu:329*K,zhi:116*K,tong:169*K+5,spd:81*K,rb:.975*.98,rm:.975*.964,crit:0,dealt:.014,img:"img/honda-tadakatsu.webp",
+ "本多忠勝":{side:"t",unit:"足輕",p:{wu:229,zhi:116,tong:169,spd:81},al:{wu:1},pts:1,ex:.07,flat:{tong:5},rb:.975*.98,rm:.975*.964,img:"img/honda-tadakatsu.webp",
   tacs:[["古今獨步","pas"],["乘勝追擊","atk2"],["堅忍不拔","pas"],["普通攻擊","atk"]]},
- {n:"本多正信",side:"t",unit:"足輕",wu:43*K,zhi:292*K*1.03,tong:83*K+5,spd:86*K,rb:.975*.98,rm:.975*.964*.96,crit:0,dealt:.014,img:"img/honda-masanobu.webp",
-  tacs:[["非常之器","cmd"],["深謀遠慮","cmd"],["所領役帳","act"],["普通攻擊","atk"]]}]},
+ "本多正信":{side:"t",unit:"足輕",p:{wu:43,zhi:192,tong:83,spd:86},al:{zhi:1},pts:1,ex:.07,flat:{tong:5},rb:.975*.98,rm:.975*.964,img:"img/honda-masanobu.webp",
+  tacs:[["非常之器","cmd"],["深謀遠慮","cmd"],["所領役帳","act"],["普通攻擊","atk"]]},
 };
+// 特性：[名稱, 解鎖紅度, 效果, 說明]
+const TRAITS={
+ "立花道雪":[["雷電化身",0,{},"未計入"],["武威II",2,{wuPct:.025},"武勇 +2.5%"],["槍術II",3,{lv:2},"足輕 +2 級"],["盡力III",5,{crit:.05},"會心 +5%"]],
+ "立花誾千代":[["近衛齊射",0,{fl:"近衛"},"普攻後 20% 麻痺"],["姬城督",2,{},"未計入"],["槍炮術II",3,{lv:2},"足輕 +2 級"],["武威I",5,{wuPct:.02},"武勇 +2%"]],
+ "北條氏康":[["祿壽應穩",0,{},"未計入"],["上下一心",2,{fl:"上下一心"},"首回合道雪、氏康免控"],["堅固II",3,{teamRm:.97},"我軍受謀略 −3%"],["槍術II",5,{lv:2},"足輕 +2 級"]],
+ "伊達政宗":[["獨眼龍",0,{dealt:.15},"大將時傷害 +15%"],["飛龍在天",2,{lv:3},"鐵炮 +3 級"],["善戰II",3,{crit:.029},"會心 2.9%"],["高昂II",5,{},"會心傷害 +3.8%（未計入）"]],
+ "真田昌幸":[["老獪",0,{},"未計入"],["虛實",2,{},"未計入"],["弓炮術II",3,{lv:2},"鐵炮 +2 級"],["智慧I",5,{zhiPct:.02},"智略 +2%"]],
+ "三好實休":[["物外軒",0,{fl:"物外軒"},"前 4 回合發動率 +4.5%"],["炮術III",2,{lv:3},"鐵炮 +3 級"],["固守II",3,{teamRb:.982},"我軍受兵刃 −1.8%"],["智慧I",5,{zhiPct:.02},"智略 +2%"]],
+ "德川家康":[["三河武士",0,{},"未計入"],["老狐狸",2,{},"無戰鬥效果"],["牢固II",3,{rb:.984,rm:.984},"受到傷害 −1.6%"],["弓槍術II",5,{lv:2},"足輕 +2 級"]],
+ "本多忠勝":[["無傷雄師",0,{},"未計入"],["剛猛II",2,{fl:"剛猛"},"較易被普攻"],["槍術II",3,{lv:2},"足輕 +2 級"],["器術II",5,{},"器械用，無效"]],
+ "本多正信":[["弓術II",0,{},"弓兵用，無效"],["看破III",2,{rm:.96},"受謀略 −4%"],["猛攻I",3,{teamDealt:.014},"我軍兵刃 +1.4%"],["智慧III",5,{zhiPct:.03},"智略 +3%"]],
+};
+const CAMP={o:4,date:2,toku:1};  // 兵種營等級（立花足輕 Lv10、伊達鐵炮 Lv10、德川足輕 Lv5 對應實戰畫面）
+const RED={}; Object.keys(UDEF).forEach(n=>RED[n]=5);
+try{const sv=JSON.parse(localStorage.getItem("nobudb-red")||"{}");for(const k in sv)if(k in RED)RED[k]=sv[k]}catch(e){}
+const TEAMLV={};
+function buildTeam(names,campKey){
+  const on=n=>TRAITS[n].filter(t=>RED[n]>=t[1]);
+  const lv=CAMP[campKey]+names.reduce((a,n)=>a+on(n).reduce((b,t)=>b+(t[2].lv||0),0),0);
+  TEAMLV[campKey]=lv;
+  let teamRb=1,teamRm=1,teamDealt=0; names.forEach(n=>on(n).forEach(([,,f])=>{if(f.teamRb)teamRb*=f.teamRb;if(f.teamRm)teamRm*=f.teamRm;if(f.teamDealt)teamDealt+=f.teamDealt}));
+  return names.map(n=>{const d=UDEF[n],r=RED[n],K=1+.02*lv+d.ex,loss=(5-r)*10+(d.pts?-(50+10*r):0);
+    const st={};for(const k of ["wu","zhi","tong","spd"])st[k]=(d.p[k]-(d.al[k]||0)*loss)*(k==="spd"&&d.side==="o"?K:K);
+    const u={n,side:d.side,unit:d.unit,boss:d.boss,img:d.img,tacs:d.tacs,crit:0,dealt:teamDealt,rb:d.rb*teamRb,rm:d.rm*teamRm,fl:{},red:r};
+    let wuP=0,zhiP=0;on(n).forEach(([,,f])=>{if(f.wuPct)wuP+=f.wuPct;if(f.zhiPct)zhiP+=f.zhiPct;if(f.crit)u.crit+=f.crit;if(f.dealt&&d.boss)u.dealt+=f.dealt;if(f.rb)u.rb*=f.rb;if(f.rm)u.rm*=f.rm;if(f.fl)u.fl[f.fl]=1});
+    u.wu=st.wu*(1+wuP)+(d.flat.wu||0); u.zhi=st.zhi*(1+zhiP)+(d.flat.zhi||0); u.tong=st.tong+(d.flat.tong||0); u.spd=st.spd+(d.flat.spd||0);
+    return u});
+}
+const OURS=[], OPP={
+ date:{label:"伊達隊",unit:"鐵炮",mo:DIS,mt:ADV,morale:100,note:"鐵炮剋足輕：對方傷害 ×1.22、我方 ×0.96",names:["伊達政宗","真田昌幸","三好實休"],units:[]},
+ toku:{label:"德川隊",unit:"足輕",mo:1,mt:1,morale:100,note:"同為足輕，無兵種相剋",names:["德川家康","本多忠勝","本多正信"],units:[]},
+};
+function rebuild(){
+  OURS.length=0; OURS.push(...buildTeam(["立花道雪","立花誾千代","北條氏康"],"o"));
+  for(const k in OPP){const a=OPP[k].units;a.length=0;a.push(...buildTeam(OPP[k].names,k))}
+}
+rebuild();
 let OPPK="date";
 const T0=10254;
 
@@ -264,7 +307,7 @@ function battle(withLog){
   const U=OURS.concat(O.units).map(d=>({...d,T:T0,para:0,conf:0,wall:0,imm:0,debuf:0,merc:0,prep:[],st:{},flags:{},drain:0,evade:0,dredP:0,dredT:0,dredR:0,hitsIn:0,tongUp:0}));
   U.forEach(u=>u.tacs.forEach(t=>u.st[t[0]]={f:0,k:0,h:0}));
   const by=n=>U.find(u=>u.n===n), ours=U.filter(u=>u.side==="o"), them=U.filter(u=>u.side==="t");
-  by("立花道雪").imm=1; by("北條氏康").imm=1;
+  if(by("北條氏康").fl["上下一心"]){by("立花道雪").imm=1; by("北條氏康").imm=1;}
   const log=[], L=s=>{if(withLog)log.push(s)}, R=Math.random;
   const nm=u=>`<span class="${u.side}">[${u.n}]</span>`;
   let cur=null, phase="";
@@ -356,7 +399,7 @@ function battle(withLog){
       if(u.para&&R()<.3){u.para--;L(`${nm(u)}處於「麻痺」狀態，無法行動`);continue}
       phase="act";
       const ran=new Set(u.prep.map(x=>x[0])); for(const [pn,f] of u.prep){fire(u,pn);f()} u.prep=[];
-      const bon=(u.n==="三好實休"&&r<=4)?.045:0; let fired=0;
+      const bon=(u.n==="三好實休"&&r<=4&&u.fl["物外軒"])?.045:0; let fired=0;
       if(u.n==="立花道雪"){
         if(R()<.35){fire(u,"霹靂一擊");const t=pick(u,foes(u));hit(u,t,2.28,"b",u,"霹靂一擊");control(t,"para",2,"麻痺")}
         if(!ran.has("所向披靡")&&R()<.30){SEC("S 所向披靡");L(`${nm(u)}「所向披靡-預備」效果已施加`);u.prep.push(["所向披靡",()=>{for(const t of foes(u))hit(u,t,2.54,"b",u,"所向披靡")}])}
@@ -381,11 +424,11 @@ function battle(withLog){
           else if(st.fcnt===2&&R()<.8){f.f++;st.furyu=Math.min(2,st.furyu+1)}}
       }
       let t=pick(u,foes(u));
-      if(t&&!u.conf&&u.side==="o"){const tc=by("本多忠勝");if(tc&&alive(tc)&&t!==tc&&R()<.33)t=tc}
+      if(t&&!u.conf&&u.side==="o"){const tc=by("本多忠勝");if(tc&&alive(tc)&&t!==tc&&tc.fl["剛猛"]&&R()<.33)t=tc}
       if(t){fire(u,"普通攻擊");hit(u,t,1,"b",u,"普通攻擊",true);
         if(u.n==="立花道雪"&&R()<.65&&!u.flags[r]){u.flags[r]=1;fire(u,"電光雷轟");
           for(const x of new Set([t,pick(u,foes(u))])){if(!x)continue;if(x.para){for(const y of foes(u))hit(u,y,.62,"b",u,"電光雷轟")}else control(x,"para",2,"麻痺")}}
-        if(u.n==="立花誾千代"&&R()<.2)control(t,"para",2,"麻痺");
+        if(u.n==="立花誾千代"&&u.fl["近衛"]&&R()<.2)control(t,"para",2,"麻痺");
         if(u.n==="本多忠勝"&&R()<.30){fire(u,"乘勝追擊");for(const y of foes(u))hit(u,y,1.36,"b",u,"乘勝追擊")}
         if(u.n==="真田昌幸"&&R()<.35){fire(u,"戰意崩壞");t.debuf=2;CT.t["降屬性"]=(CT.t["降屬性"]||0)+2;u.ctlBy+=2;L(`${nm(t)}統率、智略減少了65`)}
       }
@@ -461,7 +504,9 @@ function card(u){
   return `<article class="card${u.T<=0?" isdead":""}">
     <div class="hd"><div class="row1">${u.boss?'<span class="badge">大將</span>':'<span class="badge sub">副將</span>'}<span>${fmt(u.T)} / ${fmt(T0)}</span></div>
       <div class="mini"><i style="width:${u.T/T0*100}%"></i></div>
-      <div class="name">${u.n} <small style="font-family:var(--sans);font-weight:500;font-size:10px;color:var(--muted)">Lv50</small></div></div>
+      <div class="name">${u.n} <small style="font-family:var(--sans);font-weight:500;font-size:10px;color:var(--muted)">Lv50</small></div>
+      <div class="reds" role="group" aria-label="${u.n} 紅度">${[1,2,3,4,5].map(i=>`<button class="rd${i<=RED[u.n]?" on":""}" data-n="${u.n}" data-r="${i}" aria-label="${i} 紅" title="${i} 紅"></button>`).join("")}<span class="rl">${RED[u.n]?RED[u.n]+" 紅":"白板"}</span></div>
+      <div class="trs">${TRAITS[u.n].map(([t,r,,ds])=>`<span class="${RED[u.n]>=r?"":"off"}" title="${r} 紅解鎖：${ds}">${t}</span>`).join("")}</div></div>
     <div class="pic"><div class="ph">${ph}</div><img src="${u.img}" alt="${u.n}" onerror="this.remove()"><span class="unit">${u.unit}</span><div class="dead">陣亡</div></div>
     <div class="sum">殺敵 ${fmt(kill)}　救援 ${fmt(heal)}</div>
     <div class="tacs">${u.tacs.map(([t,c])=>{const s=u.st[t];const cls={atk2:"act",cmd:"cmd",act:"act",pas:"pas",unit:"unit",atk:"atk"}[c];
@@ -528,10 +573,15 @@ function fit(){
 window.addEventListener("resize",fit);
 window.addEventListener("orientationchange",()=>setTimeout(fit,200));
 if(document.fonts)document.fonts.ready.then(fit);
+document.getElementById("stage").addEventListener("click",e=>{const b=e.target.closest(".rd");if(!b)return;
+  const n=b.dataset.n,r=+b.dataset.r;RED[n]=(RED[n]===r&&r===1)?0:r;
+  try{localStorage.setItem("nobudb-red",JSON.stringify(RED))}catch(e){}
+  rebuild();RATE=null;setOpp(OPPK)});
 function setOpp(k){OPPK=k;const O=OPP[k];
   document.querySelectorAll(".btn.opp").forEach(b=>b.setAttribute("aria-pressed",b.dataset.k===k));
   document.getElementById("tname").textContent=O.label+"・防守";document.getElementById("tlabel").textContent=O.label;
-  document.getElementById("tsub").textContent=`士氣 ${O.morale}・${O.unit} Lv10・${O.note}`;
+  document.getElementById("tsub").textContent=`士氣 ${O.morale}・${O.unit} Lv${TEAMLV[k]}・${O.note}`;
+  document.getElementById("osub").textContent=`士氣 130・足輕 Lv${TEAMLV.o}`;
   document.getElementById("multi").hidden=true; show(battle(true));}
 document.querySelectorAll(".btn.opp").forEach(b=>b.onclick=()=>setOpp(b.dataset.k));
 // ---------- 隊伍評分 ----------

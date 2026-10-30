@@ -211,7 +211,7 @@ body{background:var(--bg);color:var(--ink);font-family:var(--sans)}
         <div class="army t"><h2><span id="tsub">士氣 100・鐵炮 Lv10・屬性為推估</span> <b id="tlabel">伊達隊</b></h2><div class="cards" id="cards-t"></div></div>
       </section>
       <div class="ctrl">
-        <span class="seg" role="group" aria-label="選擇對手"><button class="btn opp" id="opp-date" data-k="date" aria-pressed="true">對手：伊達隊</button><button class="btn opp" id="opp-toku" data-k="toku" aria-pressed="false">對手：德川隊</button></span>
+        <span class="seg" role="group" aria-label="選擇對手"><button class="btn opp" id="opp-date" data-k="date" aria-pressed="true">對手：伊達隊</button><button class="btn opp" id="opp-toku" data-k="toku" aria-pressed="false">對手：德川隊</button><button class="btn opp" id="opp-uesugi" data-k="uesugi" aria-pressed="false">對手：上杉隊</button></span>
         <button class="btn" id="b-log">對戰詳情</button>
         <button class="btn" id="b-rate">隊伍評分</button>
         <button class="btn main" id="b-one">重新對戰</button>
@@ -221,7 +221,7 @@ body{background:var(--bg);color:var(--ink);font-family:var(--sans)}
   </div>
   <div id="rate" hidden role="dialog" aria-modal="true" aria-labelledby="rate-title">
   <div class="rbox">
-    <div class="rteam" role="group" aria-label="選擇評分隊伍"><button id="rt-o" data-s="o" aria-pressed="true">立花隊</button><button id="rt-date" data-s="date" aria-pressed="false">伊達隊</button><button id="rt-toku" data-s="toku" aria-pressed="false">德川隊</button></div>
+    <div class="rteam" role="group" aria-label="選擇評分隊伍"><button id="rt-o" data-s="o" aria-pressed="true">立花隊</button><button id="rt-date" data-s="date" aria-pressed="false">伊達隊</button><button id="rt-toku" data-s="toku" aria-pressed="false">德川隊</button><button id="rt-uesugi" data-s="uesugi" aria-pressed="false">上杉隊</button></div>
     <div class="rcards" id="rcards"></div>
     <div class="rhead"><span class="t1" id="rate-title">綜合評分</span><span class="tier" id="rtier">—</span><span class="sc" id="rscore"></span><span class="ss">｜依 <b id="rn">0</b> 場模擬計算</span></div>
     <div class="rgrid">
@@ -283,6 +283,12 @@ const UDEF={
   tacs:[["表裡比興","act"],["誘敵深入","act"],["戰意崩壞","atk2"],["普通攻擊","atk"]]},
  "三好實休":{side:"t",unit:"鐵炮",p:{wu:116,zhi:187,tong:163,spd:75},obs:{wu:149,zhi:340,tong:216,spd:154.27},al:{zhi:1},pts:1,ex:.07,flat:{},rb:.96,rm:.96,nrm:.90,dealt0:-.04,img:"img/miyoshi-jikkyu.webp",
   tacs:[["風流武者","pas"],["回天轉運","act"],["瞬息萬變","act"],["普通攻擊","atk"]]},
+ "上泉信綱":{side:"t",unit:"足輕",boss:1,p:{wu:219.3,zhi:139.7,tong:132.7,spd:121.8},al:{wu:1},pts:1,ex:.07,flat:{tong:21},rb:.975,rm:.975,img:"img/kamiizumi-nobutsuna.webp",
+  tacs:[["轉","cmd"],["燕飛","act"],["斬雷神","pas"],["普通攻擊","atk"]]},
+ "長野業正":{side:"t",unit:"足輕",p:{wu:144.2,zhi:191.4,tong:191.4,spd:70.5},al:{tong:1},pts:1,ex:.07,flat:{tong:21},rb:.975,rm:.975,img:"img/nagano-narimasa.webp",
+  tacs:[["上州黃斑","cmd"],["一領具足","cmd"],["三河武士","unit"],["普通攻擊","atk"]]},
+ "宇佐美定滿":{side:"t",unit:"足輕",p:{wu:112.5,zhi:208.6,tong:152.6,spd:103.5},al:{zhi:1},pts:1,ex:.07,flat:{tong:21},rb:.975,rm:.975,img:"img/usami-sadamitsu.webp",
+  tacs:[["越後流軍學","cmd"],["直言極諫","act"],["回天轉運","act"],["普通攻擊","atk"]]},
  "德川家康":{side:"t",unit:"足輕",boss:1,p:{wu:155,zhi:169,tong:231,spd:61},al:{tong:1},pts:1,ex:.07,flat:{tong:5},rb:.975,rm:.975,img:"img/tokugawa-ieyasu.webp",
   tacs:[["三河魂","cmd"],["戮力同心","cmd"],["以逸待勞","act"],["普通攻擊","atk"]]},
  "本多忠勝":{side:"t",unit:"足輕",p:{wu:229,zhi:116,tong:169,spd:81},al:{wu:1},pts:1,ex:.07,flat:{tong:5},rb:.975*.98,rm:.975*.964,img:"img/honda-tadakatsu.webp",
@@ -298,11 +304,14 @@ const TRAITS={
  "伊達政宗":[["獨眼龍",0,{dealt:.1485},"大將時傷害 +14.85%（實測）"],["飛龍在天",2,{lv:3},"鐵炮 +3 級"],["善戰II",3,{crit:.029},"會心 2.9%"],["高昂II",5,{},"會心傷害 +3.8%（未計入）"]],
  "真田昌幸":[["老獪",0,{},"未計入"],["虛實",2,{},"未計入"],["弓炮術II",3,{lv:2},"鐵炮 +2 級"],["智慧I",5,{zhiPct:.02},"智略 +2%"]],
  "三好實休":[["物外軒",0,{fl:"物外軒"},"前 4 回合發動率 +6.5%（實測）"],["炮術III",2,{lv:3},"鐵炮 +3 級"],["固守II",3,{teamRb:.982},"我軍受兵刃 −1.8%"],["智慧I",5,{zhiPct:.02},"智略 +2%"]],
+ "上泉信綱":[["懸待表裏",0,{},"未計入"],["劍豪",2,{fl:"劍豪"},"武勇較低者傷他 −9%、較高者被他打 +9%"],["槍術III",3,{lv:3},"足輕 +3 級"],["血氣I",5,{bl:.016},"兵刃傷害 +1.6%"]],
+ "長野業正":[["金城鐵壁",0,{fl:"金城"},"被普攻且敵有負面狀態時 30% 回復 52%"],["弓槍術II",2,{lv:2},"足輕 +2 級"],["剛猛II",3,{fl:"剛猛"},"較易被普攻"],["守勢I",5,{teamRb:.99,teamRm:.99},"我軍受到傷害 −1%"]],
+ "宇佐美定滿":[["老功古實",0,{fl:"老功"},"首次受主動戰法傷害時，施放者智略 −15"],["堅固III",2,{teamRm:.963},"我軍受謀略 −3.7%"],["弓槍術II",3,{lv:2},"足輕 +2 級"],["馬術I",5,{},"騎兵用，無效"]],
  "德川家康":[["三河武士",0,{},"未計入"],["老狐狸",2,{},"無戰鬥效果"],["牢固II",3,{rb:.984,rm:.984},"受到傷害 −1.6%"],["弓槍術II",5,{lv:2},"足輕 +2 級"]],
  "本多忠勝":[["無傷雄師",0,{},"未計入"],["剛猛II",2,{fl:"剛猛"},"較易被普攻"],["槍術II",3,{lv:2},"足輕 +2 級"],["器術II",5,{},"器械用，無效"]],
  "本多正信":[["弓術II",0,{},"弓兵用，無效"],["看破III",2,{rm:.96},"受謀略 −4%"],["猛攻I",3,{teamDealt:.014},"我軍兵刃 +1.4%"],["智慧III",5,{zhiPct:.03},"智略 +3%"]],
 };
-const CAMP={o:4,date:2,toku:1};  // 兵種營等級（立花足輕 Lv10、伊達鐵炮 Lv10、德川足輕 Lv5 對應實戰畫面）
+const CAMP={o:4,date:2,toku:1,uesugi:1};  // 兵種營等級（立花足輕 Lv10、伊達鐵炮 Lv10、德川足輕 Lv5 對應實戰畫面）
 const RED={}; Object.keys(UDEF).forEach(n=>RED[n]=5);
 try{const sv=JSON.parse(localStorage.getItem("nobudb-red")||"{}");for(const k in sv)if(k in RED)RED[k]=sv[k]}catch(e){}
 const TEAMLV={};
@@ -326,7 +335,7 @@ function buildTeam(names,campKey){
   return names.map(n=>{const d=UDEF[n],r=RED[n],K=1+.02*lv+d.ex,A=alloc(n);
     const st={};for(const k of SK)st[k]=(d.p[k]+(A[k]||0))*K;
     const u={n,side:d.side,unit:d.unit,boss:d.boss,img:d.img,tacs:d.tacs,pts:A,crit:0,nrm:d.nrm||1,critD:d.critD||0,dealt:teamDealt+(d.dealt0||0),rb:d.rb*teamRb,rm:d.rm*teamRm,fl:{},red:r};
-    let wuP=0,zhiP=0;on(n).forEach(([,,f])=>{if(f.wuPct)wuP+=f.wuPct;if(f.zhiPct)zhiP+=f.zhiPct;if(f.crit)u.crit+=f.crit;if(f.dealt&&d.boss)u.dealt+=f.dealt;if(f.rb)u.rb*=f.rb;if(f.rm)u.rm*=f.rm;if(f.fl)u.fl[f.fl]=1});
+    let wuP=0,zhiP=0;on(n).forEach(([,,f])=>{if(f.wuPct)wuP+=f.wuPct;if(f.zhiPct)zhiP+=f.zhiPct;if(f.crit)u.crit+=f.crit;if(f.bl)u.dealtB=(u.dealtB||0)+f.bl;if(f.dealt&&d.boss)u.dealt+=f.dealt;if(f.rb)u.rb*=f.rb;if(f.rm)u.rm*=f.rm;if(f.fl)u.fl[f.fl]=1});
     u.wu=st.wu*(1+wuP)+(d.flat.wu||0); u.zhi=st.zhi*(1+zhiP)+(d.flat.zhi||0); u.tong=st.tong+(d.flat.tong||0); u.spd=st.spd+(d.flat.spd||0);
     if(d.obs&&!OBSREF){const ref=obsRef(n,campKey,names);for(const k of SK)u[k]=d.obs[k]+(u[k]-ref[k]);u.obs=1}
     return u});
@@ -334,6 +343,7 @@ function buildTeam(names,campKey){
 const OURS=[], OPP={
  date:{label:"伊達隊",unit:"鐵炮",mo:DIS,mt:ADV,morale:100,note:"鐵炮剋足輕：對方傷害 ×1.22、我方 ×0.96",names:["伊達政宗","真田昌幸","三好實休"],units:[]},
  toku:{label:"德川隊",unit:"足輕",mo:1,mt:1,morale:100,note:"同為足輕，無兵種相剋",names:["德川家康","本多忠勝","本多正信"],units:[]},
+ uesugi:{label:"上杉隊",unit:"足輕",mo:1,mt:1,morale:100,note:"同為足輕，無兵種相剋・屬性、兵學為推估，大將暫定上泉",names:["上泉信綱","長野業正","宇佐美定滿"],units:[]},
 };
 function rebuild(){
   OURS.length=0; OURS.push(...buildTeam(["立花道雪","立花誾千代","北條氏康"],"o"));
@@ -351,7 +361,7 @@ const MOU=1;
 const baseM=(T,A,D)=>0.463*C*Math.pow(Math.max(T,0),Q)*TS*(A+AO)*Math.exp(-D/661);
 function battle(withLog){
   const O=OPP[OPPK];
-  const U=OURS.concat(O.units).map(d=>({...d,T:T0,para:0,conf:0,wall:0,imm:0,debuf:0,merc:0,prep:[],st:{},flags:{},drain:0,evade:0,dredP:0,dredT:0,dredR:0,hitsIn:0,tongUp:0}));
+  const U=OURS.concat(O.units).map(d=>({...d,T:T0,para:0,conf:0,wall:0,imm:0,debuf:0,merc:0,prep:[],st:{},flags:{},drain:0,evade:0,dredP:0,dredT:0,dredR:0,hitsIn:0,tongUp:0,mods:[],dr:[],shen:0,critT:0,wuB:d.wu,tongB:d.tong,wu0:d.wu,stk:0,zN:0}));
   U.forEach(u=>u.tacs.forEach(t=>u.st[t[0]]={f:0,k:0,h:0}));
   const by=n=>U.find(u=>u.n===n), ours=U.filter(u=>u.side==="o"), them=U.filter(u=>u.side==="t");
   if(by("北條氏康").fl["上下一心"]){by("立花道雪").imm=1; by("北條氏康").imm=1;}
@@ -368,30 +378,38 @@ function battle(withLog){
   const M={o:{dmg:0,burst:0,multi:0,heal:0,ctl:0,maxhit:0},t:{dmg:0,burst:0,multi:0,heal:0,ctl:0,maxhit:0}};
   const st={stack:0,hits:0,furyu:0,fcnt:0,yudeki:0,mk:0,mkNeed:3,mkFire:0,mkDmg:0,rnd:0};
   const D=them.find(x=>x.boss);
+  const mkS={o:{mk:0,need:3,fire:0,dmg:0},t:{mk:0,need:3,fire:0,dmg:0}};
+  const mkHold=s=>U.find(x=>x.side===s&&x.st["三河武士"]);
+  const recalc=u=>{u.mods=u.mods.filter(m=>m.exp>=st.rnd);let w=0,t=0;for(const m of u.mods){if(m.k==="wu")w+=m.v;else t+=m.v}u.wu=u.wuB+w;u.tong=u.tongB+t};
   const credit=(owner,tac,k,h)=>{const s=owner.st[tac];if(s){s.k+=k;s.h+=h}};
   function hit(att,tgt,rate,kind,owner,tac,normal){
     if(!tgt||!alive(tgt))return 0;
     if(normal)L(`${nm(att)}對${nm(tgt)}發動普通攻擊`);
-    if(normal&&tgt.side==="o"&&att.side==="t")st.mk++;
+    if(normal&&att.side!==tgt.side&&mkHold(tgt.side))mkS[tgt.side].mk++;
     if(normal&&tgt.n==="德川家康"){const h=by("本多忠勝");if(h&&alive(h)&&R()<.8){L(`${nm(h)}執行來自【三河魂】的「援護」效果，代替${nm(tgt)}承受攻擊`);fire(by("德川家康"),"三河魂");tgt=h}}
     if(tgt.evade&&R()<tgt.evade){L(`${nm(tgt)}處於規避狀態，本次傷害無效`);L(`${nm(tgt)}損失了兵力0（${tgt.T}）`);return 0}
     if(tgt.wall>0){tgt.wall--; if(R()<.85){L(`${nm(tgt)}執行來自【相模之獅】的「鐵壁」效果`);L(`${nm(tgt)}損失了兵力0（${tgt.T}）`);return 0}}
     let A=kind==="b"?att.wu:att.zhi; if(att.n==="伊達政宗")A*=1+.05*st.stack;
     A*=1-.0355*att.drain;
     const Df=((kind==="b"?tgt.tong*(1+.16*tgt.tongUp):tgt.zhi)-(tgt.debuf?65:0))*(1-.0355*tgt.drain);
-    let d=(kind==="m"?baseM(att.T,A,Df):base(att.T,A,Df))*rate*(1+(att.dealt||0)-(att.conf&&att.side==="t"?.08:0));
+    let d=(kind==="m"?baseM(att.T,A,Df):base(att.T,A,Df))*rate*(1+(att.dealt||0)+(kind==="b"?att.dealtB||0:0)-(att.conf&&att.side==="t"?.08:0));
+    if(att.fl["劍豪"]&&tgt.wu0>att.wu0)d*=1.09; if(tgt.fl["劍豪"]&&att.wu0<tgt.wu0)d*=.91;
+    if(tgt.dr.length){const n=tgt.dr.filter(y=>y.exp>=st.rnd).length;if(n)d*=Math.pow(.76,n)}
+    if(tgt.fl["老功"]&&!tgt.flags.rk&&!normal&&att.side!==tgt.side&&tac!=="三河武士"){tgt.flags.rk=1;att.zhi-=15;L(`${nm(att)}受到${nm(tgt)}【老功古實】影響，智略減少了15`)}
     d*=Math.max(0,1-att.dredP-(att.dredR>=st.rnd?att.dredT:0));
     if(kind==="m"&&att.side==="t")d*=1+.3*st.furyu;
     if(att.side!==tgt.side)d*=att.side==="o"?O.mo:O.mt;
     d*=kind==="b"?tgt.rb:tgt.rm*MOU;
     if(normal)d*=tgt.nrm||1;
     if(tgt.conf&&tgt.side==="t")d*=1.06;
-    if(R()<att.crit)d*=1.5+(att.critD||0);
+    if(R()<att.crit+att.critT)d*=1.5+(att.critD||0);
     if(tgt.n==="立花誾千代"&&R()<.5){d*=1-.4785;by("立花誾千代").st["御旗盾無"].f++;L(`${nm(tgt)}執行來自【御旗盾無】的「受到傷害降低」效果`);L(`${nm(tgt)}受到的傷害降低了47.85%`)}
     d=Math.floor(d);
     let ab=0; if(tgt.merc){ab=Math.min(tgt.merc,d);tgt.merc-=ab;d-=ab}
     d=Math.min(d,tgt.T); tgt.T-=d; credit(owner,tac,d+ab,0); att.kills=(att.kills||0)+d+ab;
     if(att.side!==tgt.side){const m=M[att.side],g=d+ab;att.dmgR[st.rnd]+=g;m.dmg+=g;if(st.rnd<=2)m.burst+=g;if(MULTI.has(tac))m.multi+=g;if(g>m.maxhit)m.maxhit=g}
+    if(normal&&tgt.fl["金城"]&&alive(tgt)&&(att.para||att.conf||att.debuf||att.shen>=st.rnd)&&R()<.3)heal(tgt,tgt,.52,"金城鐵壁",tgt.tong);
+    if(normal)tgt.flags.hitBy={r:st.rnd,by:att};
     if(ab)L(`${nm(tgt)}的傭兵抵消了 ${ab} 點傷害`);
     L(normal?`${nm(tgt)}損失了兵力<b class="dmg">${d}</b>（${tgt.T}）`:`${nm(tgt)}由於${nm(att)}【${tac}】的傷害，損失了兵力<b class="dmg">${d}</b>（${tgt.T}）`);
     if(normal&&tgt.side==="t"&&att.side==="o"&&OPPK==="toku"){
@@ -423,8 +441,11 @@ function battle(withLog){
     st.rnd=r; L({t:"round",r}); cur=null; phase="pre";
     L({t:"order",list:U.filter(alive).sort((a,b)=>b.spd-a.spd).map(x=>({n:x.n,side:x.side}))});
     SEC("回合開始");
-    if(st.mkFire){st.mkFire=0;const o=by("北條氏康");fire(o,"三河武士");
-      for(const x of ours.filter(alive)){if(st.mkDmg)hit(x,pick(x,foes(x)),.82,best(x),o,"三河武士");else heal(o,x,.6*1.388*1.1,"三河武士")}}
+    U.forEach(u=>{u.critT=0;recalc(u)});
+    {const k=by("上泉信綱");if(k&&alive(k)){k.stk++;if(k.stk>=2){k.stk=0;fire(k,"斬雷神");k.mods.push({k:"wu",v:120,exp:r});k.critT=.5;recalc(k);L(`${nm(k)}執行來自【斬雷神】的效果，武勇增加120，獲得50%會心`)}}}
+    for(const x of U.filter(alive)){if(x.shen>=r&&x.shenSrc)hit(x.shenSrc,x,.46,"m",x.shenSrc,"上州黃斑")}
+    for(const sd of ["o","t"]){const S=mkS[sd];if(!S.fire)continue;S.fire=0;const o=mkHold(sd);if(!o)continue;fire(o,"三河武士");
+      for(const x of mates(o)){if(S.dmg)hit(x,pick(x,foes(x)),.82,best(x),o,"三河武士");else{const k2=o.n==="北條氏康"?1:(by("北條氏康").zhi+AO)/(by("北條氏康").tong+AO);heal(o,x,.6*1.388*1.1*k2,"三河武士",o.n==="北條氏康"?undefined:o.tong)}}}
     if(r%2===1)st.fcnt=0;
     if(st.yudeki){st.yudeki=0;const s=by("真田昌幸");for(const x of mates(s))hit(x,pick(x,foes(x)),1.74,best(x),s,"誘敵深入")}
     if(OPPK==="date")for(const x of them.filter(alive)){if(R()<.6){fire(D,"龍騎兵");hit(x,pick(x,foes(x)),1.04,best(x),D,"龍騎兵")}}
@@ -444,11 +465,19 @@ function battle(withLog){
             else if(R()<.5*(1+u.wu/1000))control(t,"para",1,"麻痺")}return pz};
         const pz=cast(sample(foes(u),2));
         if(pz&&u.boss&&R()<.16*(1+u.wu/1000)){const fs=foes(u);if(fs.length){L(`${nm(u)}【疾風迅雷】大將技：額外發動一次`);cast([fs[Math.floor(R()*fs.length)]])}}}
+      if(u.n==="上泉信綱"&&R()<.45){fire(u,"轉");const fs=sample(foes(u),2);
+        if(fs.length){const a=fs.reduce((p,q)=>q.tong>p.tong?q:p),b=fs.reduce((p,q)=>q.wu>p.wu?q:p);
+          for(const [x,kk] of [[a,"tong"],[b,"wu"]]){x.mods.push({k:kk,v:-8,exp:r+1});recalc(x);if(u.mods.filter(m=>m.z).length<4){u.mods.push({k:"wu",v:8,exp:r+1,z:1})}}
+          recalc(u);L(`${nm(u)}【轉】：${nm(a)}統率 −8、${nm(b)}武勇 −8，自身武勇增加`);
+          for(const x of fs)hit(u,x,1.02+(u.boss?.15:0),"b",u,"轉")}}
       if(u.n==="伊達政宗"){fire(u,"伊達風采");hit(u,pick(u,foes(u)),.92,"b",u,"伊達風采");hit(u,pick(u,foes(u)),.92,"m",u,"伊達風采");
         st.hits++; if(st.hits%2===0&&st.stack<4){st.stack++; if(st.stack===4){hit(u,pick(u,foes(u)),1.34,"b",u,"伊達風采");hit(u,pick(u,foes(u)),1.34,"m",u,"伊達風采")}}}
+      if(u.n==="長野業正"){const hb=u.flags.hitBy&&u.flags.hitBy.r===r-1?u.flags.hitBy.by:null;let tg=[];
+        if(hb){if(R()<.75&&alive(hb))tg=[hb]}else if(R()<.30)tg=sample(foes(u),2);
+        if(tg.length){fire(u,"上州黃斑");for(const x of tg){if(x.shen>=r){/*疲弊：效果未知，暫不計*/}else{x.shen=r+3;x.shenSrc=u;L(`${nm(x)}被施加「消沉」`)}}}}
       if(u.n==="德川家康"&&R()<.48){fire(u,"戮力同心");for(const x of sample(mates(u),2))heal(u,x,.82*1.42,"戮力同心",u.tong)}
-      if(u.n==="北條氏康"&&(r===3||r===4)){for(const x of mates(u))x.merc+=150;L(`${nm(u)}執行來自【一領具足】的效果，我軍全體獲得傭兵`)}
-      if(u.n==="北條氏康"&&r===1)fire(u,"一領具足");
+      if(u.st["一領具足"]&&(r===3||r===4)){for(const x of mates(u))x.merc+=150;L(`${nm(u)}執行來自【一領具足】的效果，我軍全體獲得傭兵`)}
+      if(u.st["一領具足"]&&r===1)fire(u,"一領具足");
       if(u.para&&R()<.3){u.para--;L(`${nm(u)}處於「麻痺」狀態，無法行動`);continue}
       phase="act";
       const ran=new Set(u.prep.map(x=>x[0])); for(const [pn,f] of u.prep){fire(u,pn);f()} u.prep=[];
@@ -465,6 +494,11 @@ function battle(withLog){
         for(const x of sample(foes(u),2)){x.dredT=.37;x.dredR=st.rnd+1;L(`${nm(x)}造成的傷害降低了37.00%`)}
         for(const x of sample(mates(u),3))heal(u,x,1.88,"以逸待勞",u.tong)}])}
       if(u.n==="本多正信"&&R()<.35){fire(u,"所領役帳");const ms=mates(u),t=ms.reduce((a,b)=>(a.T-T0)<(b.T-T0)?a:b);heal(u,t,2.12,"所領役帳")}
+      if(u.n==="上泉信綱"&&R()<.40){fire(u,"燕飛");const t2=pick(u,foes(u));if(t2){t2.mods.push({k:"tong",v:-60,exp:r+1});recalc(t2);hit(u,t2,2.2,"b",u,"燕飛")}}
+      if(u.n==="宇佐美定滿"){let fy=0;
+        if(R()<.50){fire(u,"直言極諫");for(const x of sample(mates(u),2)){x.dr=x.dr.filter(y=>y.exp>=r);if(x.dr.length<2)x.dr.push({exp:r+1});else x.dr[0].exp=r+1}fy++}
+        if(R()<.60){fire(u,"回天轉運");const ms=mates(u),t3=ms.reduce((a,b)=>(a.T-T0)<(b.T-T0)?a:b);heal(u,t3,2.6,"回天轉運");t3.conf=0;t3.para=0;fy++}
+        if(fy)fire(u,"越後流軍學")}
       if(u.n==="真田昌幸"){
         if(R()<.55){fire(u,"表裡比興");const t=pick(u,foes(u));if(t){const was=t.conf;hit(u,t,1.42,"m",u,"表裡比興");control(t,"conf",1,"混亂");if(was)hit(u,pick(u,foes(u)),1.92,"m",u,"表裡比興")}fired++}
         if(R()<.40){fire(u,"誘敵深入");st.yudeki=1;L(`${nm(u)}「誘敵深入-預備」效果已施加`);fired++}
@@ -478,7 +512,7 @@ function battle(withLog){
           else if(st.fcnt===2&&R()<.8){f.f++;st.furyu=Math.min(2,st.furyu+1)}}
       }
       let t=pick(u,foes(u));
-      if(t&&!u.conf&&u.side==="o"){const tc=by("本多忠勝");if(tc&&alive(tc)&&t!==tc&&tc.fl["剛猛"]&&R()<.33)t=tc}
+      if(t&&!u.conf&&u.side==="o"){const tc=foes(u).find(x=>x.fl["剛猛"]);if(tc&&t!==tc&&R()<.33)t=tc}
       if(t){fire(u,"普通攻擊");hit(u,t,1,"b",u,"普通攻擊",true);
         if(u.n==="立花道雪"&&R()<.65&&!u.flags[r]){u.flags[r]=1;fire(u,"電光雷轟");
           for(const x of [t,pick(u,foes(u))]){if(!x||!alive(x))continue;
@@ -489,7 +523,7 @@ function battle(withLog){
         if(u.n==="本多忠勝"&&R()<.30){fire(u,"乘勝追擊");for(const y of foes(u))hit(u,y,1.36,"b",u,"乘勝追擊")}
         if(u.n==="真田昌幸"&&R()<.35){fire(u,"戰意崩壞");t.debuf=2;CT.t["降屬性"]=(CT.t["降屬性"]||0)+2;u.ctlBy+=2;L(`${nm(t)}統率、智略減少了65`)}
       }
-      if(st.mk>=st.mkNeed){st.mk=0;st.mkNeed++;st.mkFire=1;if(st.mkNeed>=7)st.mkDmg=1}
+      for(const sd of ["o","t"]){const S=mkS[sd];if(S.mk>=S.need){S.mk=0;S.need++;S.fire=1;if(S.need>=7)S.dmg=1}}
       if(u.conf)u.conf--; if(u.para)u.para--;
       if(!alive(by("立花誾千代"))||!alive(D))break;
     }
@@ -534,6 +568,15 @@ const PREP_T={
   "戰法影響":[["t","[伊達政宗]","伊達風采：獲得5層風采｜獨眼龍：大將時造成傷害提高15%｜善戰II 會心 2.9%"],
    ["t","[伊達政宗]","龍騎兵：鐵炮進階為龍騎兵，每回合開始時裝填彈丸"],["t","[真田昌幸]","表裡比興・誘敵深入・戰意崩壞 已裝配｜智慧I 智略提高2%"],
    ["t","[三好實休]","風流武者-預備｜物外軒：前4回合主動、突擊戰法發動率提升4.5%｜固守II 我軍全體受到兵刃傷害減少1.8%｜智慧I 智略提高2%"]]},
+ uesugi:{
+  "士氣影響":[["t","[上泉信綱]隊","士氣100.00，造成傷害100%（推估）"]],
+  "兵種影響":[["t","[上泉信綱]隊","足輕　屬性調整為120.00%（推估）"],["t","兵種相剋","同為足輕，無相剋"]],
+  "軍學影響":[["t","[上泉信綱]隊","獲得【軍學訓練-足輕】增益效果，【統率】屬性提升了5、受到的傷害降低了2.50%（推估）"]],
+  "設施影響":[["t","[上泉信綱]隊","隊屬性提升7.0%（推估）"]],
+  "兵學影響":[["t","[上泉信綱]","兵學未知（未納入計算）"],["t","[長野業正]","兵學未知（未納入計算）"],["t","[宇佐美定滿]","兵學未知（未納入計算）"]],
+  "戰法影響":[["t","[上泉信綱]","轉-預備｜斬雷神：每回合蓄勢｜劍豪：武勇較低者傷害 −9%、較高者受傷 +9%｜血氣I 兵刃傷害 +1.6%"],
+   ["t","[長野業正]","上州黃斑｜三河武士：我軍全體統率增加16｜一領具足｜金城鐵壁｜剛猛II｜守勢I 我軍受到傷害 −1%"],
+   ["t","[宇佐美定滿]","越後流軍學：主動戰法發動率 +20%｜直言極諫｜回天轉運｜堅固III 我軍受謀略 −3.7%｜老功古實"]]},
  toku:{
   "士氣影響":[["t","[德川家康]隊","士氣100.00，造成傷害100%（推估）"]],
   "兵種影響":[["t","[德川家康]隊","足輕 Lv10　屬性調整為120.00%（推估）"],["t","兵種相剋","同為足輕，無相剋"]],
@@ -665,7 +708,7 @@ function setOpp(k){OPPK=k;const O=OPP[k];
   document.getElementById("multi").hidden=true; show(battle(true));}
 document.querySelectorAll(".btn.opp").forEach(b=>b.onclick=()=>setOpp(b.dataset.k));
 // ---------- 隊伍評分 ----------
-const TEAMS={o:{label:"立花隊",units:OURS},date:{label:"伊達隊",units:OPP.date.units},toku:{label:"德川隊",units:OPP.toku.units}};
+const TEAMS={o:{label:"立花隊",units:OURS},date:{label:"伊達隊",units:OPP.date.units},toku:{label:"德川隊",units:OPP.toku.units},uesugi:{label:"上杉隊",units:OPP.uesugi.units}};
 let RATE=null, RSEL="o";
 function runMatch(k,n){const keep=OPPK;OPPK=k;const rows=[];
   for(let i=0;i<n;i++){const b=battle(false),e=b.curve[b.curve.length-1];rows.push({M:b.M,oL:T0*3-e[0],tL:T0*3-e[1],oT:e[0],tT:e[1],res:b.result,CT:b.CT,rounds:b.curve.length-1,U:b.U.map(u=>({n:u.n,side:u.side,dmgR:u.dmgR,healR:u.healR,healTheo:u.healTheo,TR:u.TR,ctlBy:u.ctlBy,st:u.st,T:u.T}))})}
@@ -686,12 +729,13 @@ function agg(list){ // list: [{m(己方M), myLoss, foeLoss, myT}]
    ["兵力戰功比",sc(100*ratio/(ratio+1))]];
 }
 function computeRate(n){
-  const md=runMatch("date",n), mt=runMatch("toku",n);
+  const md=runMatch("date",n), mt=runMatch("toku",n), mu=runMatch("uesugi",n);
   const side=(rows,s)=>rows.map(r=>s==="o"?{m:r.M.o,myLoss:r.oL,foeLoss:r.tL,myT:r.oT}:{m:r.M.t,myLoss:r.tL,foeLoss:r.oL,myT:r.tT});
   const xr=list=>list.reduce((a,x)=>a+x.foeLoss,0)/Math.max(1,list.reduce((a,x)=>a+x.myLoss,0));
-  const o=side(md,"o").concat(side(mt,"o")), d=side(md,"t"), t=side(mt,"t");
-  return {n:n*2,raw:{date:md,toku:mt},
-    o:{bars:agg(o),vs:[["伊達隊",xr(side(md,"o"))],["德川隊",xr(side(mt,"o"))]]},
+  const o=side(md,"o").concat(side(mt,"o"),side(mu,"o")), d=side(md,"t"), t=side(mt,"t"), u2=side(mu,"t");
+  return {n:n*3,raw:{date:md,toku:mt,uesugi:mu},
+    uesugi:{bars:agg(u2),vs:[["立花隊",xr(u2)]]},
+    o:{bars:agg(o),vs:[["伊達隊",xr(side(md,"o"))],["德川隊",xr(side(mt,"o"))],["上杉隊",xr(side(mu,"o"))]]},
     date:{bars:agg(d),vs:[["立花隊",xr(d)]]},
     toku:{bars:agg(t),vs:[["立花隊",xr(t)]]}};
 }
@@ -723,7 +767,7 @@ function drawReport(){
   const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
   Chart.defaults.color=css("--muted");Chart.defaults.borderColor=css("--line");Chart.defaults.font.family=css("--sans");
   const sel=RSEL, side=sel==="o"?"o":"t", T=TEAMS[sel];
-  const list=sel==="o"?RATE.raw.date.concat(RATE.raw.toku):RATE.raw[sel];
+  const list=sel==="o"?RATE.raw.date.concat(RATE.raw.toku,RATE.raw.uesugi):RATE.raw[sel];
   const n=list.length, A=f=>list.reduce((a,r)=>a+f(r),0)/n;
   const names=T.units.slice().sort((a,c)=>(c.boss||0)-(a.boss||0)).map(u=>u.n);
   const U=(r,nm)=>r.U.find(x=>x.n===nm);

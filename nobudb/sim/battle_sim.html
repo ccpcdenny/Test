@@ -400,7 +400,7 @@ function battle(withLog){
   function hit(att,tgt,rate,kind,owner,tac,normal){
     if(!tgt||!alive(tgt))return 0;
     if(normal)L(`${nm(att)}對${nm(tgt)}發動普通攻擊`);
-    if(normal&&att.side!==tgt.side&&mkHold(tgt.side))mkS[tgt.side].mk++;
+    if(att.side!==tgt.side&&mkHold(tgt.side)&&(normal||!MULTI.has(tac)))mkS[tgt.side].mk++;
     if(normal&&tgt.n==="德川家康"){const h=by("本多忠勝");if(h&&alive(h)&&R()<.8){L(`${nm(h)}執行來自【三河魂】的「援護」效果，代替${nm(tgt)}承受攻擊`);fire(by("德川家康"),"三河魂");tgt=h}}
     if(normal){const cv=mates(tgt).find(x=>x!==tgt&&x.cover&&x.cover.for===tgt&&x.cover.exp>=st.rnd);if(cv&&R()<.8){L(`${nm(cv)}執行【電光石火】的「援護」效果，代替${nm(tgt)}承受攻擊`);tgt=cv}}
     if(tgt.evade&&R()<tgt.evade){L(`${nm(tgt)}處於規避狀態，本次傷害無效`);L(`${nm(tgt)}損失了兵力0（${tgt.T}）`);return 0}
@@ -462,7 +462,7 @@ function battle(withLog){
     {const k=by("上泉信綱");if(k&&k.st["斬雷神"]&&alive(k)){k.stk++;if(k.stk>=2){k.stk=0;fire(k,"斬雷神");k.mods.push({k:"wu",v:120,exp:r});k.critT=.5;recalc(k);L(`${nm(k)}執行來自【斬雷神】的效果，武勇增加120，獲得50%會心`)}}}
     for(const x of U.filter(alive)){if(x.shen>=r&&x.shenSrc)hit(x.shenSrc,x,.46,"m",x.shenSrc,"上州黃斑")}
     for(const sd of ["o","t"]){const S=mkS[sd];if(!S.fire)continue;S.fire=0;const o=mkHold(sd);if(!o)continue;fire(o,"三河武士");
-      for(const x of mates(o)){if(S.dmg)hit(x,pick(x,foes(x)),.82,best(x),o,"三河武士");else{const k2=o.n==="北條氏康"?1:(UNITS.o.o[2].zhi+AO)/(UNITS.o.o[2].tong+AO);heal(o,x,.6*1.388*1.1*k2,"三河武士",o.n==="北條氏康"?undefined:o.tong)}}}
+      for(const x of mates(o)){if(S.dmg)hit(x,pick(x,foes(x)),.82,best(x),o,"三河武士");else{const k2=o.n==="北條氏康"?1:(UNITS.o.o[2].zhi+AO)/(UNITS.o.o[2].tong+AO);heal(o,x,.6*1.388*1.1*.45*k2,"三河武士",o.n==="北條氏康"?undefined:o.tong)}}}
     if(r%2===1)st.fcnt=0;
     if(st.yudeki){st.yudeki=0;const s=by("真田昌幸");for(const x of mates(s))hit(x,pick(x,foes(x)),1.74,best(x),s,"誘敵深入")}
     {const dm=by("伊達政宗");if(dm)for(const x of mates(dm)){if(R()<.6){fire(dm,"龍騎兵");hit(x,pick(x,foes(x)),1.04,best(x),dm,"龍騎兵")}}}
@@ -547,7 +547,7 @@ function battle(withLog){
         if(u.n==="本多忠勝"&&R()<.30){fire(u,"乘勝追擊");for(const y of foes(u))hit(u,y,1.36,"b",u,"乘勝追擊")}
         if(u.n==="真田昌幸"&&R()<.35){fire(u,"戰意崩壞");t.debuf=2;CT.t["降屬性"]=(CT.t["降屬性"]||0)+2;u.ctlBy+=2;L(`${nm(t)}統率、智略減少了65`)}
       }
-      for(const sd of ["o","t"]){const S=mkS[sd];if(S.mk>=S.need){S.mk=0;S.need++;S.fire=1;if(S.need>=7)S.dmg=1}}
+      for(const sd of ["o","t"]){const S=mkS[sd];if(S.mk>=S.need){S.mk=0;S.need++;S.fire=1;S.dmg=(S.need===8)?1:0}}
       if(u.conf)u.conf--; if(!u.conf)u.confF=0; if(u.para)u.para--;
       if(!alive(Do)||!alive(D))break;
     }
